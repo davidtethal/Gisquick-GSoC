@@ -15,12 +15,12 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      '/home/vagrant/dev/node_modules/gislab-web/node_modules/angular/angular.js',
-      '/home/vagrant/dev/node_modules/gislab-web/node_modules/angular-animate/angular-animate.js',
-      '/home/vagrant/dev/node_modules/gislab-web/node_modules/angular-material/angular-material.js',
-      '/home/vagrant/dev/node_modules/gislab-web/node_modules/angular-aria/angular-aria.js',
-      '/home/vagrant/dev/node_modules/gislab-web/node_modules/angular-ui-layout/dist/ui-layout.js',
-      '/home/vagrant/dev/node_modules/gislab-web/node_modules/angular-material-data-table/dist/md-data-table.js',
+      'node_modules/gislab-web/node_modules/angular/angular.js',
+      'node_modules/gislab-web/node_modules/angular-animate/angular-animate.js',
+      'node_modules/gislab-web/node_modules/angular-material/angular-material.js',
+      'node_modules/gislab-web/node_modules/angular-aria/angular-aria.js',
+      'node_modules/gislab-web/node_modules/angular-ui-layout/dist/ui-layout.js',
+      'node_modules/gislab-web/node_modules/angular-material-data-table/dist/md-data-table.js',
       'node_modules/angular-mocks/angular-mocks.js',
       'node_modules/openlayers/build/ol3-deps.debug.js',
       'src/web/js/web.module.js',

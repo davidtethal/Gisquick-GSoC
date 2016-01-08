@@ -89,6 +89,17 @@ gulp.task('icons-mobile', function() {
 });
 
 /**
+ * Run test once and exit
+ */
+gulp.task('test', function (done) {
+  var Server = require('karma').Server;
+  new Server({
+    configFile: __dirname + '/karma.conf.js',
+    singleRun: true
+  }, done).start();
+});
+
+/**
  * Default gulp task
  */
 gulp.task('default', ['build-web']);

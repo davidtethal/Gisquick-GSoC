@@ -42,6 +42,7 @@
     "karma": "~0.13.16",
     "jasmine-core": "~2.4.1",
     "karma-jasmine": "~0.3.6",
-    "angular-mocks": "~1.4.8"
+    "angular-mocks": "~1.4.8",
+    "gulp-karma": "0.0.5"
   }
 }

@@ -1,6 +1,11 @@
 describe('Test MapBuilder', function() {
 
+  var mapBuilder;
   beforeEach(module('gl.map'));
+
+  beforeEach(inject(function(_mapBuilder_) {
+    mapBuilder = _mapBuilder_;
+  }));
 
   it('MapBox.createMapBoxLayer', function() {
     var conf = {
@@ -11,7 +16,7 @@ describe('Test MapBuilder', function() {
       'mapid': 'jachym.1z95xvcu',
       'type': 'MapBox'
     };
-    var layer = MapBuilder.createMapBoxLayer(conf);
+    var layer = mapBuilder.createBaseLayer(conf);
     expect(layer).toBeTruthy();
   });
 });
