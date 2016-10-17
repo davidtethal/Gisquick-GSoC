@@ -4,7 +4,7 @@ packages:
   - g++
   - libxml2-dev
   - libxslt-dev
-  - openjdk-7-jre
+  - openjdk-8-jre
   - python3-dev
   - python-pip
   - virtualenvwrapper
