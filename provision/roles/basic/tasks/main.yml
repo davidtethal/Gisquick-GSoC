@@ -1,12 +1,23 @@
 ---
 # BASIC SYSTEM CONFIGURATION
 
+### PYTHON 2 INSTALLATION
+- name: Ensure Python 2 is installed before running Ansible modules
+  raw: >
+    apt-get update --assume-yes
+    &&
+    apt-get install --assume-yes python-minimal
+
+- name: Gather Ansible facts
+  setup:
+
+
 ### SANITY CHECKS
 - name: Check Ansible version (== 2)
   assert:
     that:
       - ansible_version.major == 2
-
+      - ansible_version.minor >= 1
 
 ### BASIC
 - name: Generate locale
@@ -31,7 +42,7 @@
 
 - name: Add QGIS repository
   apt_repository:
-    repo: 'deb http://qgis.org/{{ qgis_repo }} trusty main'
+    repo: 'deb http://qgis.org/{{ qgis_repo }} xenial main'
     state: present
   become: yes
 
@@ -43,6 +54,13 @@
     cache_valid_time: 3600
   environment: "{{ proxy_env }}"
   become: yes
+
+- name: Install aptitude which is required for running system upgrade
+  apt:
+    pkg: aptitude
+    force: yes
+    install_recommends: no
+    state: latest
 
 - name: Upgrade system
   apt:
