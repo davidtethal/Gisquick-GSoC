@@ -1,7 +1,6 @@
 ---
 
 - hosts: all
-  become: yes
   gather_facts: false  # disable gathering Ansible facts until Python 2 is not
                        # installed or Ansible comes with Python 3 support
 

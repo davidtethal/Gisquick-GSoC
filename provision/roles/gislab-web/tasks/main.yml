@@ -43,7 +43,9 @@
     &&
     workon gislab-web
     &&
-    add2virtualenv server
+    ln -sf  python3 /home/{{ ansible_user }}/.virtualenvs/gislab-web/bin/python
+    &&
+    add2virtualenv {{ synced_folder }}/server
   args:
     chdir: "{{ synced_folder }}"
     executable: /bin/bash
