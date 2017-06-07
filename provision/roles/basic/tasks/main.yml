@@ -35,17 +35,18 @@
     state: present
   become: yes
 
-- name: Add QGIS repository signing key
-  apt_key:
-    url: http://qgis.org/downloads/qgis-2016.gpg.key
-    state: present
-  become: yes
+### Not needed, UbuntuGIS also contains QGIS packages
+# - name: Add QGIS repository signing key
+#   apt_key:
+#     url: http://qgis.org/downloads/qgis-2016.gpg.key
+#     state: present
+#   become: yes
 
-- name: Add QGIS repository
-  apt_repository:
-    repo: 'deb http://qgis.org/{{ qgis_repo }} xenial main'
-    state: present
-  become: yes
+# - name: Add QGIS repository
+#   apt_repository:
+#     repo: 'deb http://qgis.org/{{ qgis_repo }} xenial main'
+#     state: present
+#   become: yes
 
 
 ### PACKAGES
