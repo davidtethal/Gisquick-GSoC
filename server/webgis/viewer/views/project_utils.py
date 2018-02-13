@@ -334,6 +334,7 @@ def get_project(request):
             'expiration_date': metadata.expiration,
             'selection_color': metadata.selection_color[:-2], #strip alpha channel,
             'position_precision': metadata.position_precision,
+            'time_data': metadata.time_data,
             'topics': metadata.topics,
             'authentication': metadata.authentication,
             'plugin_version': metadata.plugin_version

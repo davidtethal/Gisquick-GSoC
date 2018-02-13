@@ -22,6 +22,9 @@
           <icon name="legend" />
           Legend
         </v-tabs-item>
+        <v-tabs-item href="#slider">
+          Slider
+        </v-tabs-item>
       </v-tabs-bar>
       <v-tabs-items>
 
@@ -91,8 +94,18 @@
           </scroll-area>
         </v-tabs-content>
 
+        <v-tabs-content id="slider">
+          <scroll-area class="">
+            <Slider :project="this.project"/>
+          </scroll-area>
+        </v-tabs-content>
+
       </v-tabs-items>
     </v-tabs>
+<!--    <button class="menu-toolbar">
+      <img src="https://cdn4.iconfinder.com/data/icons/tupix-1/30/list-512.png"/>
+    </button>-->
+    <!--<v-icon class="fa-heart"></v-icon>-->
   </div>
 </template>
 
@@ -101,11 +114,13 @@ import { layersList, groupLayers } from '../../map-builder'
 import LayerItem from './LayerItem'
 import Legend from './Legend'
 import ScrollArea from '../ScrollArea'
+import Slider from './Slider'
 
 export default {
   name: 'content-panel',
-  components: { LayerItem, Legend, ScrollArea },
-  props: ['baseLayers', 'overlays'],
+  components: {
+    Slider, LayerItem, Legend, ScrollArea },
+  props: ['baseLayers', 'overlays', 'project'],
   inject: ['$map'],
   data () {
     return {
@@ -266,5 +281,13 @@ export default {
       display: block;
     }
   }
+}
+
+.menu-toolbar img{
+  position: absolute;
+  left: 300px;
+  top: 0;
+  width: 36px;
+  height: 36px;
 }
 </style>

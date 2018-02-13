@@ -14,7 +14,7 @@ import SelectProjectDialog from './components/SelectProjectDialog'
 
 export default {
   name: 'app',
-  components: { Map, LoginDialog, SelectProjectDialog },
+  components: {Map, LoginDialog, SelectProjectDialog},
   data () {
     return {
       showProjects: false,
@@ -33,6 +33,7 @@ export default {
         HTTP
           .project(project)
           .then(resp => {
+            console.log(resp.data)
             this.project = resp.data
           })
           .catch(resp => {
