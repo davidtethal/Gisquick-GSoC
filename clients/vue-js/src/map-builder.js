@@ -280,6 +280,7 @@ export function createMap (config) {
 
   const layers = []
   const overlay = createQgisLayer(config)
+
   if (config.base_layers) {
     config.base_layers.forEach(baseLayerCfg => {
       const baseLayer = createBaseLayer(baseLayerCfg)
@@ -303,6 +304,7 @@ export function createMap (config) {
     })
   })
   map.overlay = overlay
+
 
   // define getScale method for map's view object
   // (using scales from project metadata)

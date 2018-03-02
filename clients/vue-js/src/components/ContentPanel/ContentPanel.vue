@@ -96,7 +96,10 @@
 
         <v-tabs-content id="slider">
           <scroll-area class="">
-            <Slider :project="this.project"/>
+            <Slider
+              :project="this.project"
+              :map="this.map"
+              :overlays="this.overlays"/>
           </scroll-area>
         </v-tabs-content>
 
@@ -119,8 +122,8 @@ import Slider from './Slider'
 export default {
   name: 'content-panel',
   components: {
-    Slider, LayerItem, Legend, ScrollArea },
-  props: ['baseLayers', 'overlays', 'project'],
+    Slider, LayerItem, Legend, ScrollArea},
+  props: ['baseLayers', 'overlays', 'project', 'map'],
   inject: ['$map'],
   data () {
     return {
@@ -172,7 +175,10 @@ export default {
       this.overlays.list.forEach(l => {
         l.visible = (l.hidden || l._visible) && !excluded.includes(l.name)
       })
+
       this.visibleLayers = this.overlays.list.filter(l => l.visible)
+
+//      console.log(this.visibleLayers)
 
       this.$map.overlay.getSource().setVisibleLayers(this.visibleLayers.map(l => l.name))
     },

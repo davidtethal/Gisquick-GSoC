@@ -58,13 +58,13 @@
         <div v-if="isExpanded" class="metadata">
           <label>Geometry:</label>
           <icon :name="layer.geom_type? layer.geom_type.toLowerCase() : 'raster'" /><br />
-          
+
           <label>Identification:</label>
           <icon :name="layer.queryable? 'check' : 'dash'" /><br />
-          
+
           <label>Abstract:</label>
           <span>{{ layer.metadata.abstract }}</span><br />
-          
+
           <label>Keywords list:</label>
           <span>{{ layer.metadata.keyword_list }}</span><br />
 

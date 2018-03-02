@@ -1,7 +1,7 @@
 <template>
   <div class="map-container">
     <div ref="mapEl" class="map" />
-    <ContentPanel :baseLayers="baseLayers" :overlays="overlays" :project="this.project" />
+    <ContentPanel :baseLayers="baseLayers" :overlays="overlays" :project="this.project" :map="this.map" />
   </div>
 </template>
 
@@ -35,13 +35,14 @@ export default {
     }
   },
   created () {
-    console.log('map', this.project)
     this.map = createMap(this.project)
     this._provided.$map = this.map
   },
   mounted () {
     this.map.setTarget(this.$refs.mapEl)
   }
+
+
 }
 </script>
 
