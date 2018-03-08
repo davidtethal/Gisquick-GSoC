@@ -178,8 +178,6 @@ export default {
 
       this.visibleLayers = this.overlays.list.filter(l => l.visible)
 
-//      console.log(this.visibleLayers)
-
       this.$map.overlay.getSource().setVisibleLayers(this.visibleLayers.map(l => l.name))
     },
     expanded (id) {

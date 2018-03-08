@@ -56,8 +56,6 @@ export default {
       const source = this.$map.overlay.getSource()
       const view = this.$map.getView()
       this.legendList = this.layers.map(l => source.getLegendUrl(l.name, view))
-//      console.log(this.legendList)
-//      console.log(view)
     }
   }
 }
