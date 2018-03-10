@@ -1,19 +1,19 @@
 <template>
   <div>
     <!--layers drop box-->
-    <!--label="Select Time Layer"-->
     <v-select
       @change="timeLayerChanged"
       :items="this.project.time_data"
-      :filter="customFilter"
       item-text="layer"
-      autocomplete
     ></v-select>
+    <!--label="Select Time Layer"-->
+    <!--:filter="customFilter"-->
     <span v-if="this.timeLayerIndex != -1">
     <p>layer: {{this.timeData.layer}}</p>
     <p>time-attribute: {{this.timeData.attribute}}</p>
       <!--<p v-for="time in this.timeValues">{{time}}</p>-->
-    <v-slider v-model="sliderValue" v-on:click="getSliderUrl" thumb-label step="1" ticks v-bind:min="this.sliderMin" v-bind:max="this.sliderMax"></v-slider>
+      <!--thumb-label-->
+    <v-slider v-model="sliderValue" v-on:click="getSliderUrl"  step="1" ticks v-bind:min="this.sliderMin" v-bind:max="this.sliderMax"></v-slider>
     <v-text-field id="test" v-model="sliderValue" type="number"></v-text-field>
     </span>
   </div>
@@ -95,6 +95,7 @@
         // add time layer data
         this.newLayer.values_.title = `${this.timeData.layer}-${this.sliderValue}`
         this.newLayer.values_.hidden = false
+        this.newLayer.values_.metadata = this.overlays.list.filter(l => l.name === this.timeData.layer)[0].metadata
         //
         // add or replace time layer in layers list
         const index = this.overlays.tree.indexOf(this.lastLayer.values_)
@@ -113,7 +114,8 @@
           this.map.removeLayer(this.lastLayer)
         })
       },
-      customFilter (item, queryText, itemText) {
+     /*
+     customFilter (item, queryText, itemText) {
         const hasValue = val => val != null ? val : ''
         const text = hasValue(item.layer)
         const query = hasValue(queryText)
@@ -121,6 +123,7 @@
           .toLowerCase()
           .indexOf(query.toString().toLowerCase()) > -1
       },
+      */
       hideParentLayer () {
         const visibleLayers = this.overlays.list.filter(l => l.visible)
         for (let i = 0; i < visibleLayers.length; i++) {
