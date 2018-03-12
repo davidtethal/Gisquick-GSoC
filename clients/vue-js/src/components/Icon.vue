@@ -7,7 +7,7 @@
 <script>
 
 const svgIcons = require.context('../../icons', false, /.*\.svg$/)
-console.log(svgIcons)
+
 function requireAll (requireContext) {
   return requireContext.keys().map(requireContext)
 }
@@ -18,3 +18,9 @@ export default {
 }
 
 </script>
+
+<style>
+.icon {
+  fill: currentColor;
+}
+</style>

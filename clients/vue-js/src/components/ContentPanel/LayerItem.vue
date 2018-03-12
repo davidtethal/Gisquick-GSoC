@@ -18,20 +18,16 @@
           @change="toggleGroupVisibility"
           hide-details />
       </div>
-      <Collapsible>
-        <div
-          v-show="!collapsed"
-          :class="{disabled: !layer.visible}">
-          <layer-item
-            v-for="l in layer.layers"
-            :key="l.title"
-            :layer="l"
-            :expanded="expanded"
-            :depth="depth + 1"
-            @changed:visibility="$emit('changed:visibility')"
-            @expanded="(id) => $emit('expanded', id)" />
-        </div>
-      </Collapsible>
+      <v-collapsible v-show="!collapsed" :class="{disabled: !layer.visible}">
+        <layer-item
+          v-for="l in layer.layers"
+          :key="l.title"
+          :layer="l"
+          :expanded="expanded"
+          :depth="depth + 1"
+          @changed:visibility="$emit('changed:visibility')"
+          @expanded="(id) => $emit('expanded', id)" />
+      </v-collapsible>
     </div>
 
     <!-- Layer Item -->
@@ -54,8 +50,9 @@
             <v-icon>keyboard_arrow_down</v-icon>
         </v-btn>
       </div>
-      <Collapsible>
+      <collapse-transition>
         <div v-if="isExpanded" class="metadata">
+          <div class="pb-1" />
           <label>Geometry:</label>
           <icon :name="layer.geom_type? layer.geom_type.toLowerCase() : 'raster'" /><br />
 
@@ -68,26 +65,23 @@
           <label>Keywords list:</label>
           <span>{{ layer.metadata.keyword_list }}</span><br />
 
-<!--           <label>Maximal scale:</label>
+  <!--           <label>Maximal scale:</label>
           <span> 1: {{ layer.visibility_scale_min }}</span><br /> -->
+          <div class="pb-1" />
         </div>
-      </Collapsible>
+      </collapse-transition>
     </div>
 
 </template>
 
 <script>
 import Vue from 'vue'
-import Collapsible from '../Collapsible'
 
 export default Vue.component('layer-item', {
   props: ['layer', 'expanded', 'depth'],
-  components: { Collapsible },
-  data () {
-    return {
-      collapsed: false
-    }
-  },
+  data: () => ({
+    collapsed: false
+  }),
   computed: {
     isExpanded () {
       return this.expanded === this.layer.name
@@ -107,7 +101,8 @@ export default Vue.component('layer-item', {
 
 <style lang="scss">
 @import '../../theme.scss';
-.layers-list {
+
+.content-panel {
 
   /* Fixes checkbox position in FF */
   .icon--selection-control {
@@ -122,9 +117,9 @@ export default Vue.component('layer-item', {
   }
 
   .item-container {
-    padding-left: 4px;
     .item {
       position: relative;
+      padding-left: 4px;
       .btn.expand {
         position: absolute;
         top: 0;
@@ -139,8 +134,8 @@ export default Vue.component('layer-item', {
       }
     }
     .metadata {
-      font-size: 80%;
-      padding-bottom: 0.25em;
+      font-size: 0.813em;
+      padding-left: 4px;
       label {
         font-weight: 600;
       }
@@ -151,13 +146,13 @@ export default Vue.component('layer-item', {
     }
     &.expanded {
       .item {
-        background-color: rgba($primary-color, 0.2);
+        background-color: rgba($primary-color, 0.15);
         .btn.expand .icon {
           transform: rotateZ(180deg);
         }
       }
       .metadata {
-        background-color: rgba($primary-color, 0.1);
+        background-color: rgba($primary-color, 0.05);
       }
     }
   }
