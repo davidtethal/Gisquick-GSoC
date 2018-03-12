@@ -1,14 +1,11 @@
 import os
+from django.conf import settings
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
-DEBUG = False
-
 GISQUICK_PROJECT_ROOT = '/publish/'
 GISQUICK_MAPSERVER_URL = 'http://qgisserver:90/cgi-bin/qgis_mapserv.fcgi'
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 ### DATABASE
 DATABASES = {
@@ -17,6 +14,9 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'data', 'gisquick.sqlite3'),
     }
 }
+
+# INSTALLED_APPS = settings.INSTALLED_APPS + ('sslserver',)
+
 
 LOGGING = {
     'version': 1,

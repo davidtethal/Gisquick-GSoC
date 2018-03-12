@@ -8,43 +8,41 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-owslib \
     supervisor \
     sqlite3 \
+    curl \
+    nano \
     && rm -rf /var/lib/apt/lists/*
 
 
-# Install Gunicorn and GIS.lab Web dependencies
-COPY tmp/requirements.txt /tmp/
-
-RUN pip3 install --no-cache-dir 'gunicorn>=19.7,<19.8' && \
-    pip3 install --no-cache-dir -r /tmp/requirements.txt
-
-COPY tmp/gisquick-dev.tar.gz /tmp/
-
-RUN pip3 install --no-cache-dir /tmp/gisquick-dev.tar.gz && \
-    rm /tmp/gisquick-dev.tar.gz
+# Install Server dependencies
+COPY server/requirements.txt /tmp/requirements.txt
+COPY server/requirements-dev.txt /tmp/requirements-dev.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && \
+    pip3 install --no-cache-dir -r /tmp/requirements-dev.txt && \
+    rm -r /tmp/*
 
 
-# Create GisQuick Django project
+# Create Gisquick Django project
+COPY server/conf /tmp/conf
 RUN mkdir -p /var/www/gisquick && \
     mkdir -p /var/log/django/ && \
     mkdir -p /var/log/gunicorn/ && \
-    django-admin startproject --template=/usr/local/lib/python3.5/dist-packages/webgis/conf/project_template/ djproject /var/www/gisquick/
+    django-admin startproject --template=/tmp/conf/project_template/ djproject /var/www/gisquick/
 
-
-COPY settings_custom.py /var/www/gisquick/djproject/
+COPY settings_custom.py /var/www/gisquick/djproject/settings_custom.py
 
 ENV PYTHONPATH $PYTHONPATH:/var/www/gisquick/
 ENV DJANGO_SETTINGS_MODULE djproject.settings
 ENV LANG C.UTF-8
 
 
-# Configure Gunicorn and Supervisor
-COPY gunicorn_conf.py /var/www/gisquick/gunicorn_conf.py
+# Configure Supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 
 VOLUME /var/www/gisquick/static/
 VOLUME /var/www/gisquick/media/
 VOLUME /var/www/gisquick/data/
+VOLUME /var/www/gisquick/webgis/
 EXPOSE 8000
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
