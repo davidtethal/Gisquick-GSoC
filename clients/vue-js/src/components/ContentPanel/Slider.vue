@@ -9,12 +9,11 @@
     <!--label="Select Time Layer"-->
     <!--:filter="customFilter"-->
     <span v-if="this.timeLayerIndex != -1">
-    <p>layer: {{this.timeData.layer}}</p>
     <p>time-attribute: {{this.timeData.attribute}}</p>
       <!--<p v-for="time in this.timeValues">{{time}}</p>-->
       <!--thumb-label-->
     <v-slider v-model="sliderValue" v-on:click="getSliderUrl"  step="1" ticks v-bind:min="this.sliderMin" v-bind:max="this.sliderMax"></v-slider>
-    <v-text-field id="test" v-model="sliderValue" type="number"></v-text-field>
+    <v-text-field v-on:input="getSliderUrl()" id="test" v-model="sliderValue" type="text"></v-text-field>
     </span>
   </div>
 </template>
@@ -88,7 +87,9 @@
 //            layersOrder: {'husinec-budovy': 0},
             params: {
               'FORMAT': 'image/png',
-              'FILTER': `${this.timeData.layer}:"${this.timeData.attribute}" < ${this.sliderValue}`
+//              'LAYER' : `${this.timeData.layer}`,
+              'FILTER': `${this.timeData.layer}:"${this.timeData.attribute}" < '${this.sliderValue}'`
+//              'FILTER': `${this.timeData.layer}:cast("${this.timeData.attribute}" as character) < ${this.sliderValue}`
             },
             serverType: 'qgis',
             ratio: 1
@@ -103,12 +104,21 @@
         // add or replace time layer in layers list
         const index = this.$overlays.tree.indexOf(this.lastLayer.values_)
         if (index !== -1) {
+          this.$overlays.list.splice(index, 1)
+          this.$overlays.tree.splice(index, 1)
+/*
           this.$overlays.list[index] = this.newLayer.values_
           this.$overlays.tree[index] = this.newLayer.values_
-        } else {
+*/
+        }
+/*
+        else {
           this.$overlays.list.push(this.newLayer.values_)
           this.$overlays.tree.push(this.newLayer.values_)
         }
+*/
+        this.$overlays.list.push(this.newLayer.values_)
+        this.$overlays.tree.push(this.newLayer.values_)
         this.$overlays.list.forEach(l => { this.$set(l, '_visible', l.visible) })
         //
         // add layer into map
@@ -117,18 +127,7 @@
           this.$map.removeLayer(this.lastLayer)
         })
       },
-     /*
-     customFilter (item, queryText, itemText) {
-        const hasValue = val => val != null ? val : ''
-        const text = hasValue(item.layer)
-        const query = hasValue(queryText)
-        return text.toString()
-          .toLowerCase()
-          .indexOf(query.toString().toLowerCase()) > -1
-      },
-      */
       hideParentLayer () {
-        console.log(this.$overlays)
         const visibleLayers = this.$overlays.list.filter(l => l.visible)
         for (let i = 0; i < visibleLayers.length; i++) {
           if (visibleLayers[i].name === this.timeData.layer) {
