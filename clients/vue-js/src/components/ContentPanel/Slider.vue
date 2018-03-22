@@ -1,249 +1,174 @@
 <template>
-  <div>
+  <div class="pa-2">
     <!--layers drop box-->
     <v-select
-      @change="timeLayerSelected"
-      :items="this.timeLayerSelection"
-      item-text="title"
-    ></v-select>
-    <!--attributes drop box-->
-    <v-select
-      v-if="this.allTimeAttributes.length > 1"
-      @change="this.hideLayersWithoutAttribute"
-      :items="this.allTimeAttributes"
-    ></v-select>
+      :items="$project.layers"
+      v-model="timeData"
+      item-text="name"
+    />
     <!--label="Select Time Layer"-->
     <!--:filter="customFilter"-->
-    <span v-if="this.activeTimeLayer.timeAttribute">
-    <p>time-attribute: {{this.activeTimeLayer.timeAttribute}}</p>
-      <!--<p v-for="time in this.timeValues">{{time}}</p>-->
+    <div v-if="timeData">
+      <p>time-attribute: {{timeData.timeAttribute}}</p>
+      <!--<p v-for="time in timeValues">{{time}}</p>-->
       <!--thumb-label-->
-    <v-slider v-model="sliderValue" v-on:click="getSliderUrl"  step="1" ticks v-bind:min="this.sliderMin" v-bind:max="this.sliderMax"></v-slider>
-    <v-text-field v-on:input="getSliderUrl()" id="test" v-model="sliderValue" type="text"></v-text-field>
-    </span>
+      <v-slider
+        ticks
+        @click="getNewUrl()"
+        v-model="sliderValue"
+        :min="sliderMin"
+        :max="sliderMax"
+        :step="1"
+        hide-details
+      />
+      <v-text-field
+        type="number"
+        v-model="sliderValue"
+        hide-details
+      />
+    </div>
   </div>
 </template>
 
 <script>
-  import { WebgisImageWMS } from '../../map-builder'
   import ImageLayer from 'ol/layer/image'
-
+  import { WebgisImageWMS, layersList } from '../../map-builder'
 
   export default {
     inject: ['$map', '$project', '$overlays'],
     name: 'timeslide',
-/*
-    props: [
-      'project', 'overlays', 'map'
-    ],
-*/
 
     data () {
       return {
-        activeTimeLayer: {},
-//        timeLayerIndex: -1,
-        sliderValue: 0,
-        sliderDirty: false,
+        layers: layersList(this.$project.layers, true),
+        timeData: null,
+        sliderValue: null,
         sliderMin: 0,
-        sliderMax: 0,
-        lastLayer: {},
-        newLayer: {},
-        timeLayerSelection: [],
-        allTimeAttributes: []
+        sliderMax: 0
+      }
+    },
+
+    computed: {
+      layerModel () {
+        if (this.timeData) {
+          return this.layers.find(l => l.name === this.timeData.name)
+        }
+      }
+    },
+
+    watch: {
+      timeData (value, oldValue) {
+        this.setSliderValue()
+        this.sliderMin = this.timeData.timeValues[0]
+        this.sliderMax = this.timeData.timeValues[1]
+        this.getNewUrl()
+      },
+      layerModel (model, oldModel) {
+/*
+        if (oldModel) {
+          this.resetLayerTitle(oldModel)
+        }
+*/
+        model._title = model.title
+        if (!model.visible) {
+          this.setModelVisibility(model, true)
+        }
       }
     },
 
     created () {
-      this.allLayersIntoSelect()
-    },
+      const map = this.$map
+      if (!(map.overlay instanceof ImageLayer)) {
+        // create and switch to WMS layer
+        this.originalLayer = map.overlay
+        this.originalLayer.setVisible(false)
 
-    mounted () {
-    },
-
-    methods: {
-      sliderInit (multipleLayers) {
-        if (multipleLayers) {
-          // set min max values
-          let min = multipleLayers[0].timeValues[0]
-          let max = multipleLayers[0].timeValues[1]
-          for (let i = 0; i < multipleLayers.length; i++) {
-            if (min > multipleLayers[i].timeValues[0]) {
-              min = multipleLayers[i].timeValues[0]
-            }
-            if (max < multipleLayers[i].timeValues[1]) {
-              max = multipleLayers[i].timeValues[1]
-            }
-          }
-          this.activeTimeLayer.timeValues = [min, max]
-        }
-        this.sliderValue = this.activeTimeLayer.timeValues[0]
-        this.sliderMin = this.sliderValue
-        this.sliderMax = this.activeTimeLayer.timeValues.slice(-1)[0]
-        this.lastLayer = {}
-        this.newLayer = {}
-      },
-      timeLayerSelected (selectedLayer) {
-        this.activeTimeLayer = {}
-        this.activeTimeLayer = selectedLayer
-        if (this.activeTimeLayer.title === 'all visible time layers') {
-          this.compareTimeLayers()
-        }
-        this.sliderInit()
-      },
-      getSliderUrl () {
-        // set visible layers
-        let visibleLayers = []
-        if (this.activeTimeLayer.multipleLayers) {
-          visibleLayers = this.activeTimeLayer.multipleLayers
-        } else {
-          visibleLayers.push(this.activeTimeLayer.title)
-        }
-        // hide filtered layers
-        this.hideParentLayers(visibleLayers)
-        // made filter expression
-        let timeFilter = ''
-        for (let i = 0; i < visibleLayers.length; i++) {
-          timeFilter += `${visibleLayers[i]}:"${this.activeTimeLayer.timeAttribute}" < '${this.sliderValue}';`
-        }
-        // store previous time layer
-        this.lastLayer = this.newLayer
-        //
-        // get time layer
-        this.newLayer = new ImageLayer({
+        this.layer = new ImageLayer({
           visible: true,
           extent: this.$project.project_extent,
           source: new WebgisImageWMS({
             resolutions: this.$project.tile_resolutions,
             url: this.$project.ows_url,
-            visibleLayers: visibleLayers,
+            visibleLayers: this.originalLayer.getSource().getVisibleLayers(),
             layersAttributions: {},
-//            layersOrder: {'husinec-budovy': 0},
             params: {
-              'FORMAT': 'image/png',
-              'FILTER': timeFilter
-//              'FILTER': `${this.activeTimeLayer.title}:"${this.activeTimeLayer.timeAttribute}" < '${this.sliderValue}'`
-//              'FILTER': `${this.activeTimeLayer.multipleLayers[0]}:"${this.activeTimeLayer.timeAttribute}" < '${this.sliderValue}';${this.activeTimeLayer.multipleLayers[1]}:"${this.activeTimeLayer.timeAttribute}" < '${this.sliderValue}'`
-//              'FILTER': `${this.activeTimeLayer.title}:cast("${this.activeTimeLayer.timeAttribute}" as character) < ${this.sliderValue}`
+              'FORMAT': 'image/png'
             },
             serverType: 'qgis',
             ratio: 1
           })
         })
-        //
-        // add time layer data
-        this.newLayer.values_.title = `${this.activeTimeLayer.title}-${this.sliderValue}`
-        this.newLayer.values_.timeAttribute = this.activeTimeLayer.timeAttribute
-        this.newLayer.values_.timeValues = this.activeTimeLayer.timeValues
-        this.newLayer.values_.hidden = false
-        this.newLayer.values_.temporaryTimeLayer = true
-//        this.newLayer.values_.metadata = this.$overlays.list.filter(l => l.name === this.activeTimeLayer.title)[0].metadata
-        console.log(this.newLayer)
-        //
-        // add or replace time layer in layers list
-        const index = this.$overlays.tree.indexOf(this.lastLayer.values_)
-        if (index !== -1) {
-          this.$overlays.list.splice(index, 1)
-          this.$overlays.tree.splice(index, 1)
-        }
-        this.$overlays.list.push(this.newLayer.values_)
-        this.$overlays.tree.push(this.newLayer.values_)
-        this.$overlays.list.forEach(l => { this.$set(l, '_visible', l.visible) })
-        //
-        // add layer into map
-        this.$map.addLayer(this.newLayer)
-        this.newLayer.getSource().on('imageloadend', () => {
-          this.$map.removeLayer(this.lastLayer)
-        })
+        map.addLayer(this.layer)
+        // set as new main map's layer - required to control layers visibility in Content panel
+        map.overlay = this.layer
+      }
+    },
+
+    // todo delete names
+    beforeDestroy () {
+      for (let i = 0; i < this.layers.length; i++) {
+        this.resetLayerTitle(this.layers[i])
+        delete this.layers[i].sliderValue
+        delete this.layers[i].timeFilter
+      }
+/*
+      if (this.layerModel) {
+        this.resetLayerTitle(this.layerModel)
+      }
+*/
+      if (this.originalLayer) {
+        // switch back to original cached layer
+        const map = this.$map
+        map.removeLayer(this.layer)
+        map.overlay = this.originalLayer
+        map.overlay.getSource().setVisibleLayers(this.layer.getSource().getVisibleLayers())
+        map.overlay.setVisible(true)
+      }
+    },
+
+    methods: {
+      resetLayerTitle (layerModel) {
+        layerModel.title = layerModel._title || layerModel.title
+        delete layerModel._title
       },
-      hideParentLayers (hideLayers) {
+      setModelVisibility (model, visible) {
         const visibleLayers = this.$overlays.list.filter(l => l.visible)
-        for (let j = 0; j < hideLayers.length; j++){
-          for (let i = 0; i < visibleLayers.length; i++) {
-            if (visibleLayers.length > 0 && visibleLayers[i].name === hideLayers[j]) {
-              visibleLayers.splice(i, 1)
-              this.$overlays.list.forEach((l) => {
-                if (l.name === hideLayers[j]) {
-                  l.visible = false
-                }
-              })
-              /*this.$overlays.tree.forEach((l) => {
-                if (l.name === this.activeTimeLayer.title) {
-                  l.visible = false
-                }
-              })*/
-              break
-            }
-          }
+        if (visible) {
+          visibleLayers.push(model)
+          model._visible = true
+          model.visible = true
         }
-        this.$map.overlay.getSource().setVisibleLayers(visibleLayers.map(l => l.name))
+        this.layer.getSource().setVisibleLayers(visibleLayers.map(l => l.name))
       },
-      // add "all visible layers" selection into select box
-      allLayersIntoSelect () {
-        const allLayers = {
-          timeAttribute: '',
-          title: 'all visible time layers',
-          timeValues: ''
-        }
-        this.timeLayerSelection.push(allLayers)
-        for (let i = 0; i < this.$project.time_data.length; i++) {
-          if (this.$overlays.list[i].timeAttribute) {
-            this.timeLayerSelection.push(this.$overlays.list[i])
-          }
-        }
-      },
-      compareTimeLayers () {
-        // get visible time layers
-        const visibleTimeLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute && !l.temporaryTimeLayer)
-        // count and valid time layers
-        if ((visibleTimeLayers.length === 0)) {
-          console.log('NO LAYER SELECTED')
-        } else if (visibleTimeLayers.length === 1) {
-          this.activeTimeLayer = visibleTimeLayers[0]
-          console.log('ONE LAYER SELECTED')
-          this.sliderInit()
+      setSliderValue () {
+        if (this.layerModel.sliderValue) {
+          this.sliderValue = this.layerModel.sliderValue
         } else {
-          // find unique attributes
-          this.allTimeAttributes = [...new Set(visibleTimeLayers.map(item => item.timeAttribute))]
-          if (this.allTimeAttributes.length === 1) {
-            this.hideLayersWithoutAttribute(this.allTimeAttributes[0])
-          }
+          this.sliderValue = this.timeData.timeValues[0]
         }
       },
-      hideLayersWithoutAttribute (attribute) {
-        const visibleLayers = []
-        const visibleLayersTitles = []
-        // hide time layers that doesn't contain given attribute
-        for (let i = 0; i < this.$overlays.list.length; i++) {
-          if (this.$overlays.list[i].timeAttribute) {
-            if (!this.$overlays.list[i].temporaryTimeLayer && this.$overlays.list[i].timeAttribute === attribute) {
-              this.$overlays.list[i].visible = true
-              this.$overlays.list[i]._visible = true
-              visibleLayers.push(this.$overlays.list[i])
-              visibleLayersTitles.push(this.$overlays.list[i].title)
-            } else if (!this.$overlays.list[i].temporaryTimeLayer) {
-              this.$overlays.list[i].visible = false
-              this.$overlays.list[i]._visible = false
-            }
+      getFilterFromLayers (layers, layerModel) {
+        const modelIndex = layers.indexOf(layerModel)
+        let filter = ''
+        for (let i = 0; i < layers.length; i++) {
+          if (layers[i].timeFilter && i !== modelIndex) {
+            filter += `;${layers[i].timeFilter}`
           }
         }
-        // change map
-        this.$map.overlay.getSource().setVisibleLayers(visibleLayers.map(l => l.name))
-        // set active layers
-        this.activeTimeLayer.multipleLayers = visibleLayersTitles
-        // initialize slider
-        this.sliderInit(visibleLayers)
-        // set time attribute name
-        this.setTimeLayerAttribute(attribute)
+        return filter
       },
-      setTimeLayerAttribute (attribute) {
-        this.activeTimeLayer.timeAttribute = attribute
+      getNewUrl () {
+        const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
+        const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" < '${this.sliderValue}'`
+        const filter = `${modelFilter}${otherLayerFilter}`
+        this.layer.getSource().updateParams({'FILTER': filter})
+        this.layerModel.title = `${this.timeData.name}-${this.sliderValue}`
+        this.layerModel.sliderValue = this.sliderValue
+        this.layerModel.timeFilter = modelFilter
       }
     }
-
   }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss">
-
 </style>
