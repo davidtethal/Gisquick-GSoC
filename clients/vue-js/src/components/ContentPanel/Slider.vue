@@ -23,12 +23,15 @@
         v-model="sliderValue"
         :min="sliderMin"
         :max="sliderMax"
-        :step="1"
+        :step="step"
         hide-details
       />
+     <!-- <div class="slidecontainer">
+        <input type="range" min="1309471200" max="1507672800" v-model="sliderValue" class="slider" id="myRange">
+      </div>-->
       <v-text-field
-        type="number"
-        v-model="sliderValue"
+        type="text"
+        v-model="sliderValueDate"
         hide-details
       />
     </div>
@@ -36,6 +39,7 @@
 </template>
 
 <script>
+  import moment from 'moment'
   import ImageLayer from 'ol/layer/image'
   import { WebgisImageWMS, layersList } from '../../map-builder'
 
@@ -50,6 +54,7 @@
         attributesSelection: [],
         timeData: null,
         sliderValue: null,
+        sliderValueDate: null,
         attribute: null,
         sliderMin: 0,
         sliderMax: 0,
@@ -65,6 +70,10 @@
           return this.layers.find(l => l.name === this.timeData.name)
         }
       }
+/*      step () {
+        console.log('STEP', (this.sliderMax - this.sliderMin) / 1000)
+        return (this.sliderMax - this.sliderMin) / 1000
+      }*/
     },
 
     watch: {
@@ -105,6 +114,13 @@
         this.sliderMin = minmax[0]
         this.sliderMax = minmax[1]
         this.openInfo = true
+      },
+      sliderValue (value) {
+//        console.log('UNIX', value)
+        console.log('MIN', this.sliderMin)
+        console.log('MAX', this.sliderMax)
+        console.log(moment(value * 1000).format('YYYY MM DD'))
+        this.sliderValueDate = moment(value * 1000).format('YYYY MM DD')
       }
     },
 
@@ -205,12 +221,14 @@
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
         const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" < '${this.sliderValue}'`
         const filter = `${modelFilter}${otherLayerFilter}`
+        console.log(this.layer)
         this.layer.getSource().updateParams({'FILTER': filter})
         this.layerModel.title = `${this.timeData.name}-${this.sliderValue}`
         this.layerModel.sliderValue = this.sliderValue
         this.layerModel.timeFilter = modelFilter
       },
       updateMultipleLayers () {
+        console.log('MULTIPLE')
         const attribute = this.attribute || this.attributesSelection[0]
         const layers = this.$project.layers
         let filter = ''
