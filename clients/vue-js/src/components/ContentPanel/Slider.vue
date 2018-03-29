@@ -69,11 +69,11 @@
         } else if (this.timeData) {
           return this.layers.find(l => l.name === this.timeData.name)
         }
-      }
-/*      step () {
+      },
+      step () {
         console.log('STEP', (this.sliderMax - this.sliderMin) / 1000)
         return (this.sliderMax - this.sliderMin) / 1000
-      }*/
+      }
     },
 
     watch: {
