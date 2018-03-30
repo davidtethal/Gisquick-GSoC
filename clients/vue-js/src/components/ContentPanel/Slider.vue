@@ -17,7 +17,7 @@
       <p>time-attribute: {{timeData.timeAttribute}}</p>
       <!--<p v-for="time in timeValues">{{time}}</p>-->
       <!--thumb-label-->
-      <v-slider
+<!--      <v-slider
         ticks
         @click="getNewUrl()"
         v-model="sliderValue"
@@ -25,10 +25,18 @@
         :max="sliderMax"
         :step="step"
         hide-details
-      />
-     <!-- <div class="slidecontainer">
-        <input type="range" min="1309471200" max="1507672800" v-model="sliderValue" class="slider" id="myRange">
-      </div>-->
+      />-->
+      <div class="slidecontainer">
+        <input
+          type="range"
+          @click="getNewUrl()"
+          v-model="sliderValue"
+          :min="sliderMin"
+          :max="sliderMax"
+          :step="step"
+          class="slider"
+          id="myRange">
+      </div>
       <v-text-field
         type="text"
         v-model="sliderValueDate"
@@ -71,8 +79,8 @@
         }
       },
       step () {
-        console.log('STEP', (this.sliderMax - this.sliderMin) / 1000)
-        return (this.sliderMax - this.sliderMin) / 1000
+        console.log('STEP', (this.sliderMax - this.sliderMin) / 100)
+        return (this.sliderMax - this.sliderMin) / 100
       }
     },
 
@@ -104,7 +112,7 @@
           this.resetLayerTitle(oldModel)
         }
 */
-        model._title = model.title
+//        model._title = model.title
         if (!model.visible) {
           this.setModelVisibility(model, true)
         }
@@ -117,10 +125,10 @@
       },
       sliderValue (value) {
 //        console.log('UNIX', value)
-        console.log('MIN', this.sliderMin)
-        console.log('MAX', this.sliderMax)
-        console.log(moment(value * 1000).format('YYYY MM DD'))
-        this.sliderValueDate = moment(value * 1000).format('YYYY MM DD')
+//        console.log('MIN', this.sliderMin)
+//        console.log('MAX', this.sliderMax)
+//        console.log(moment(value * 1000).format('DD-MM-YYYY'))
+        this.sliderValueDate = moment(value * 1000).format('DD-MM-YYYY')
       }
     },
 
@@ -153,18 +161,12 @@
       }
     },
 
-    // todo delete names
     beforeDestroy () {
       for (let i = 0; i < this.layers.length; i++) {
-        this.resetLayerTitle(this.layers[i])
+        this.layers[i].title = this.layers[i].name
         delete this.layers[i].sliderValue
         delete this.layers[i].timeFilter
       }
-/*
-      if (this.layerModel) {
-        this.resetLayerTitle(this.layerModel)
-      }
-*/
       if (this.originalLayer) {
         // switch back to original cached layer
         const map = this.$map
@@ -176,10 +178,6 @@
     },
 
     methods: {
-      resetLayerTitle (layerModel) {
-        layerModel.title = layerModel._title || layerModel.title
-        delete layerModel._title
-      },
       // make selected layer visible
       setModelVisibility (model, visible) {
         const visibleLayers = this.$overlays.list.filter(l => l.visible)
