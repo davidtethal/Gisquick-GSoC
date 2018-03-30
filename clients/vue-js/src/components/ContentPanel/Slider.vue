@@ -1,20 +1,23 @@
 <template>
   <div class="pa-2">
     <!--layers drop box-->
+    <!--@change in case of selecting same option twice-->
     <v-select
       label="Select Time Layer"
       :items="layersSelection"
       v-model="timeData"
       item-text="name"
+      @change="deleteAttribute()"
     />
     <v-select
-      v-if="attributesSelection.length > 1"
+      v-if="attributesSelection.length > 1 && !attribute"
       label="Select Attribute"
       :items="attributesSelection"
       v-model="attribute"
     />
     <div v-if="openInfo">
-      <p>time-attribute: {{timeData.timeAttribute}}</p>
+      <p v-if="!attribute">time-attribute: {{timeData.original_time_attribute}}</p>
+      <p v-if="attribute">time-attribute: {{attribute}}</p>
       <!--<p v-for="time in timeValues">{{time}}</p>-->
       <!--thumb-label-->
 <!--      <v-slider
@@ -86,7 +89,10 @@
 
     watch: {
       timeData (value, oldValue) {
+        console.log(value)
         this.attributesSelection = []
+        this.attribute = null
+        // todo Initialize Slider value
         // case of all layers
         if (value.selectAllLayers) {
           this.checkDiffAttributes()
@@ -118,10 +124,13 @@
         }
       },
       attribute (value) {
-        const minmax = this.getSliderRange(value)
-        this.sliderMin = minmax[0]
-        this.sliderMax = minmax[1]
-        this.openInfo = true
+        console.log('ATTRIBUTE', value)
+        if (value) {
+          const minmax = this.getSliderRange(value)
+          this.sliderMin = minmax[0]
+          this.sliderMax = minmax[1]
+          this.openInfo = true
+        }
       },
       sliderValue (value) {
 //        console.log('UNIX', value)
@@ -216,28 +225,37 @@
         }
       },
       updateSingleLayer () {
+        console.log('SINGLE')
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
         const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" < '${this.sliderValue}'`
         const filter = `${modelFilter}${otherLayerFilter}`
-        console.log(this.layer)
+        console.log(filter)
         this.layer.getSource().updateParams({'FILTER': filter})
         this.layerModel.title = `${this.timeData.name}-${this.sliderValue}`
         this.layerModel.sliderValue = this.sliderValue
         this.layerModel.timeFilter = modelFilter
+        console.log(this.layerModel)
       },
       updateMultipleLayers () {
         console.log('MULTIPLE')
         const attribute = this.attribute || this.attributesSelection[0]
-        const layers = this.$project.layers
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute)
+        console.log(visibleLayers)
+        let filterIncrement = ''
         let filter = ''
-        for (let i = 0; i < layers.length; i++) {
-          if (layers[i].timeAttribute && layers[i].timeAttribute === attribute && layers[i].visible) {
-            filter += `;${layers[i].name}:"${layers[i].timeAttribute}" < '${this.sliderValue}'`
-            layers[i].title = `${layers[i].name}-${this.sliderValue}`
-            layers[i].sliderValue = this.sliderValue
-            layers[i].timeFilter = filter
+        for (let i = 0; i < visibleLayers.length; i++) {
+          console.log(visibleLayers[i].name)
+          if (visibleLayers[i].original_time_attribute === attribute) {
+            filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].timeAttribute}" < '${this.sliderValue}'`
+            filter += filterIncrement
+            visibleLayers[i].title = `${visibleLayers[i].name}-${this.sliderValue}`
+            visibleLayers[i].sliderValue = this.sliderValue
+            visibleLayers[i].timeFilter = filterIncrement
+          } else {
+            filter += `;${visibleLayers[i].timeFilter}`
           }
         }
+        console.log(filter)
         this.layer.getSource().updateParams({'FILTER': filter})
       },
       // add "All visible layers" option into select
@@ -254,23 +272,38 @@
       checkDiffAttributes () {
         this.openInfo = false
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute)
-        this.attributesSelection = [...new Set(visibleLayers.map(l => l.timeAttribute))]
+        this.attributesSelection = [...new Set(visibleLayers.map(l => l.original_time_attribute))]
       },
       // get min and max slider range
       getSliderRange (attribute) {
-        const vl = this.$overlays.list.filter(l => l.visible && l.timeAttribute)
+        console.log(attribute)
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute && l.original_time_attribute === attribute)
         // set min max values
         let min = 1E+100
         let max = -1E+100
-        for (let i = 0; i < vl.length; i++) {
-          if (vl[i].timeAttribute && vl[i].timeAttribute === attribute && min > vl[i].timeValues[0]) {
-            min = vl[i].timeValues[0]
+        for (let i = 0; i < visibleLayers.length; i++) {
+          if (min > visibleLayers[i].timeValues[0]) { // vl[i].timeAttribute && vl[i].timeAttribute === attribute &&
+            min = visibleLayers[i].timeValues[0]
           }
-          if (vl[i].timeAttribute && vl[i].timeAttribute === attribute && max < vl[i].timeValues[1]) {
-            max = vl[i].timeValues[1]
+          if (max < visibleLayers[i].timeValues[1]) { // vl[i].timeAttribute && vl[i].timeAttribute === attribute &&
+            max = visibleLayers[i].timeValues[1]
           }
         }
         return [min, max]
+      },
+      deleteAttribute () {
+        this.attribute = null
+        this.openInfo = false
+        console.log(this.attribute)
+        this.attributesSelection = []
+        this.checkDiffAttributes()
+        if (this.attributesSelection.length === 1) {
+          this.attribute = this.attributesSelection[0]
+          const minmax = this.getSliderRange(this.attributesSelection[0])
+          this.sliderMin = minmax[0]
+          this.sliderMax = minmax[1]
+          this.openInfo = true
+        }
       }
     }
   }
