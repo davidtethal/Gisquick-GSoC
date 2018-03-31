@@ -7,7 +7,7 @@
       :items="layersSelection"
       v-model="timeData"
       item-text="name"
-      @change="deleteAttribute()"
+      @change="resetAttribute()"
     />
     <v-select
       v-if="attributesSelection.length > 1 && !attribute"
@@ -92,7 +92,7 @@
         console.log(value)
         this.attributesSelection = []
         this.attribute = null
-        // todo Initialize Slider value
+        // todo timeData watch or trigger method
         // case of all layers
         if (value.selectAllLayers) {
           this.checkDiffAttributes()
@@ -101,6 +101,7 @@
             const minmax = this.getSliderRange(this.attributesSelection[0])
             this.sliderMin = minmax[0]
             this.sliderMax = minmax[1]
+            this.sliderValue = minmax[0]
             this.openInfo = true
           }
           // case of one layer
@@ -129,6 +130,7 @@
           const minmax = this.getSliderRange(value)
           this.sliderMin = minmax[0]
           this.sliderMax = minmax[1]
+          this.sliderValue = minmax[0]
           this.openInfo = true
         }
       },
@@ -258,7 +260,7 @@
         console.log(filter)
         this.layer.getSource().updateParams({'FILTER': filter})
       },
-      // add "All visible layers" option into select
+      // add "All visible layers" option into layers select
       addAllIntoSelection () {
         const all = {
           name: 'All visible layers',
@@ -291,7 +293,7 @@
         }
         return [min, max]
       },
-      deleteAttribute () {
+      resetAttribute () {
         this.attribute = null
         this.openInfo = false
         console.log(this.attribute)
@@ -302,6 +304,7 @@
           const minmax = this.getSliderRange(this.attributesSelection[0])
           this.sliderMin = minmax[0]
           this.sliderMax = minmax[1]
+          this.sliderValue = minmax[0]
           this.openInfo = true
         }
       }
