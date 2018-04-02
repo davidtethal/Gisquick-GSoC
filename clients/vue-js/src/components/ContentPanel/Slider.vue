@@ -2,8 +2,6 @@
   <div class="pa-2">
     <!--layers drop box-->
     <!--@change in case of selecting same option twice-->
-    <!--<v-date-picker v-model="date" no-title="true" :reactive="false"></v-date-picker>-->
-
 
     <v-select
       label="Select Time Layer"
@@ -63,16 +61,55 @@
           type="range">
       </section>
 
-      <v-text-field
-        type="text"
-        v-model="sliderValueDate1"
-        hide-details
-      />
-      <v-text-field
-        type="text"
-        v-model="sliderValueDate"
-        hide-details
-      />
+      <!--datepicker 1-->
+      <v-menu
+        ref="menu1"
+        lazy
+        :close-on-content-click="false"
+        v-model="menu1"
+        transition="scale-transition"
+        offset-y
+        full-width
+        :nudge-right="40"
+        :return-value.sync="pickerDate1">
+        <v-text-field
+          slot="activator"
+          v-model="sliderValueDate1"
+          prepend-icon="event"
+          readonly
+        ></v-text-field>
+        <v-date-picker v-model="pickerDate1" no-title scrollable>
+          <v-spacer></v-spacer>
+          <v-btn flat color="primary" @click="menu1 = false">Cancel</v-btn>
+          <v-btn flat color="primary" @click="$refs.menu1.save(pickerDate1); getNewUrl()">OK</v-btn>
+        </v-date-picker>
+      </v-menu>
+
+      <!--datepicker 2-->
+      <v-menu
+        ref="menu2"
+        lazy
+        :close-on-content-click="false"
+        v-model="menu2"
+        transition="scale-transition"
+        offset-y
+        full-width
+        :nudge-right="40"
+        :return-value.sync="pickerDate2">
+        <v-text-field
+          slot="activator"
+          v-model="sliderValueDate"
+          prepend-icon="event"
+          readonly
+        ></v-text-field>
+        <v-date-picker v-model="pickerDate2" no-title scrollable>
+          <v-spacer></v-spacer>
+          <v-btn flat color="primary" @click="menu2 = false">Cancel</v-btn>
+          <v-btn flat color="primary" @click="$refs.menu2.save(pickerDate2); getNewUrl()">OK</v-btn>
+        </v-date-picker>
+      </v-menu>
+
+
     </div>
   </div>
 </template>
@@ -100,7 +137,11 @@
         sliderMin: 0,
         sliderMax: 0,
         openInfo: false,
-        date: null
+//        datepicker
+        pickerDate1: null,
+        menu1: false,
+        pickerDate2: null,
+        menu2: false
       }
     },
 
@@ -166,15 +207,23 @@
           this.openInfo = true
         }
       },
+      // todo add min max into date pickers!!
+      // todo set slider pushing!!
       sliderValue1 (value) {
         this.sliderValueDate1 = moment(value * 1000).format('DD-MM-YYYY')
+        this.pickerDate1 = moment(value * 1000).format('YYYY-MM-DD')
       },
       sliderValue (value) {
-//        console.log('UNIX', value)
-//        console.log('MIN', this.sliderMin)
-//        console.log('MAX', this.sliderMax)
-//        console.log(moment(value * 1000).format('DD-MM-YYYY'))
         this.sliderValueDate = moment(value * 1000).format('DD-MM-YYYY')
+        this.pickerDate2 = moment(value * 1000).format('YYYY-MM-DD')
+      },
+      pickerDate1 () {
+        this.sliderValueDate1 = moment(this.pickerDate1).format('DD-MM-YYYY')
+        this.sliderValue1 = moment(this.pickerDate1,'YYYY-MM-DD').unix()
+      },
+      pickerDate2 () {
+        this.sliderValueDate = moment(this.pickerDate2).format('DD-MM-YYYY')
+        this.sliderValue = moment(this.pickerDate2,'YYYY-MM-DD').unix()
       }
     },
 
@@ -287,13 +336,13 @@
 //        const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" < '${this.sliderValue}'`
         const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" >= '${this.sliderValue1}' AND "${this.timeData.timeAttribute}" <= '${this.sliderValue}'`
         const filter = `${modelFilter}${otherLayerFilter}`
-        console.log(filter)
+//        console.log(filter)
         this.layer.getSource().updateParams({'FILTER': filter})
         this.layerModel.title = `${this.timeData.name}-${this.sliderValue}`
         this.layerModel.sliderValue1 = this.sliderValue1
         this.layerModel.sliderValue = this.sliderValue
         this.layerModel.timeFilter = modelFilter
-        console.log(this.layerModel)
+//        console.log(this.layerModel)
       },
       updateMultipleLayers () {
         console.log('MULTIPLE')
@@ -379,10 +428,6 @@
 
         var displayElement = parent.getElementsByClassName("rangeValues")[0];
         displayElement.innerHTML = "$ " + slide1 + "k - $" + slide2 + "k";
-      },
-      testSlider1 () {
-        console.log(this.range1)
-        console.log(this.range2)
       }
     }
   }
