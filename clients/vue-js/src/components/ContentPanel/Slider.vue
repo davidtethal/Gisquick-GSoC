@@ -2,6 +2,9 @@
   <div class="pa-2">
     <!--layers drop box-->
     <!--@change in case of selecting same option twice-->
+    <!--<v-date-picker v-model="date" no-title="true" :reactive="false"></v-date-picker>-->
+
+
     <v-select
       label="Select Time Layer"
       :items="layersSelection"
@@ -29,7 +32,7 @@
         :step="step"
         hide-details
       />-->
-      <div class="slidecontainer">
+<!--      <div class="slidecontainer">
         <input
           type="range"
           @click="getNewUrl()"
@@ -39,7 +42,32 @@
           :step="step"
           class="slider"
           id="myRange">
-      </div>
+      </div>-->
+
+      <!--double range slider-->
+      <section class="range-slider">
+        <span class="rangeValues"></span>
+        <input
+          @click="getNewUrl()"
+          v-model="sliderValue1"
+          :min="sliderMin"
+          :max="sliderMax"
+          :step="step"
+          type="range">
+        <input
+          @click="getNewUrl()"
+          v-model="sliderValue"
+          :min="sliderMin"
+          :max="sliderMax"
+          :step="step"
+          type="range">
+      </section>
+
+      <v-text-field
+        type="text"
+        v-model="sliderValueDate1"
+        hide-details
+      />
       <v-text-field
         type="text"
         v-model="sliderValueDate"
@@ -64,12 +92,15 @@
         layersSelection: [],
         attributesSelection: [],
         timeData: null,
+        sliderValue1: 0,
         sliderValue: null,
+        sliderValueDate1: null,
         sliderValueDate: null,
         attribute: null,
         sliderMin: 0,
         sliderMax: 0,
-        openInfo: false
+        openInfo: false,
+        date: null
       }
     },
 
@@ -101,6 +132,7 @@
             const minmax = this.getSliderRange(this.attributesSelection[0])
             this.sliderMin = minmax[0]
             this.sliderMax = minmax[1]
+            this.sliderValue1 = minmax[0]
             this.sliderValue = minmax[0]
             this.openInfo = true
           }
@@ -134,6 +166,9 @@
           this.openInfo = true
         }
       },
+      sliderValue1 (value) {
+        this.sliderValueDate1 = moment(value * 1000).format('DD-MM-YYYY')
+      },
       sliderValue (value) {
 //        console.log('UNIX', value)
 //        console.log('MIN', this.sliderMin)
@@ -144,6 +179,20 @@
     },
 
     created () {
+
+      // Initialize Sliders
+      var sliderSections = document.getElementsByClassName("range-slider");
+      for( var x = 0; x < sliderSections.length; x++ ){
+        var sliders = sliderSections[x].getElementsByTagName("input");
+        for( var y = 0; y < sliders.length; y++ ){
+          if( sliders[y].type ==="range" ){
+            sliders[y].oninput = this.getVals();
+            // Manually trigger event first time to display values
+            sliders[y].oninput();
+          }
+        }
+      }
+
       this.addAllIntoSelection()
       const map = this.$map
       if (!(map.overlay instanceof ImageLayer)) {
@@ -175,6 +224,7 @@
     beforeDestroy () {
       for (let i = 0; i < this.layers.length; i++) {
         this.layers[i].title = this.layers[i].name
+        delete this.layers[i].sliderValue1
         delete this.layers[i].sliderValue
         delete this.layers[i].timeFilter
       }
@@ -201,6 +251,11 @@
       },
       // initialize slider by last used value
       setSliderValue () {
+        if (this.layerModel.sliderValue1) {
+          this.sliderValue1 = this.layerModel.sliderValue1
+        } else {
+          this.sliderValue1 = this.timeData.timeValues[0]
+        }
         if (this.layerModel.sliderValue) {
           this.sliderValue = this.layerModel.sliderValue
         } else {
@@ -229,11 +284,13 @@
       updateSingleLayer () {
         console.log('SINGLE')
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
-        const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" < '${this.sliderValue}'`
+//        const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" < '${this.sliderValue}'`
+        const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" >= '${this.sliderValue1}' AND "${this.timeData.timeAttribute}" <= '${this.sliderValue}'`
         const filter = `${modelFilter}${otherLayerFilter}`
         console.log(filter)
         this.layer.getSource().updateParams({'FILTER': filter})
         this.layerModel.title = `${this.timeData.name}-${this.sliderValue}`
+        this.layerModel.sliderValue1 = this.sliderValue1
         this.layerModel.sliderValue = this.sliderValue
         this.layerModel.timeFilter = modelFilter
         console.log(this.layerModel)
@@ -248,9 +305,11 @@
         for (let i = 0; i < visibleLayers.length; i++) {
           console.log(visibleLayers[i].name)
           if (visibleLayers[i].original_time_attribute === attribute) {
-            filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].timeAttribute}" < '${this.sliderValue}'`
+//            filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].timeAttribute}" < '${this.sliderValue}'`
+            filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].timeAttribute}" >= '${this.sliderValue1}' AND "${visibleLayers[i].timeAttribute}" <= '${this.sliderValue}'`
             filter += filterIncrement
             visibleLayers[i].title = `${visibleLayers[i].name}-${this.sliderValue}`
+            visibleLayers[i].sliderValue1 = this.sliderValue1
             visibleLayers[i].sliderValue = this.sliderValue
             visibleLayers[i].timeFilter = filterIncrement
           } else {
@@ -304,13 +363,120 @@
           const minmax = this.getSliderRange(this.attributesSelection[0])
           this.sliderMin = minmax[0]
           this.sliderMax = minmax[1]
+          this.sliderValue1 = minmax[0]
           this.sliderValue = minmax[0]
           this.openInfo = true
         }
+      },
+      getVals () {
+        // Get slider values
+        var parent = this.parentNode;
+        var slides = parent.getElementsByTagName("input");
+        var slide1 = parseFloat( slides[0].value );
+        var slide2 = parseFloat( slides[1].value );
+        // Neither slider will clip the other, so make sure we determine which is larger
+        if( slide1 > slide2 ){ var tmp = slide2; slide2 = slide1; slide1 = tmp; }
+
+        var displayElement = parent.getElementsByClassName("rangeValues")[0];
+        displayElement.innerHTML = "$ " + slide1 + "k - $" + slide2 + "k";
+      },
+      testSlider1 () {
+        console.log(this.range1)
+        console.log(this.range2)
       }
     }
   }
 </script>
 
 <style lang="scss">
+
+  /*slider*/
+  @mixin range-slider($width, $height, $input-top, $input-bg-color, $input-thumb-color, $float:none, $input-height:20px, $input-border-radius:14px) {
+    position: relative;
+    width: $width;
+    height: $height;
+    float: $float;
+    text-align: center;
+
+    input[type="range"] {
+      pointer-events: none;
+      position: absolute;
+      -webkit-appearance: none;
+      -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+      border: none;
+      border-radius: $input-border-radius;
+      background: $input-bg-color;
+      box-shadow: inset 0 1px 0 0 darken($input-bg-color,15%), inset 0 -1px 0 0 darken($input-bg-color,10%);
+      -webkit-box-shadow: inset 0 1px 0 0 darken($input-bg-color,15%), inset 0 -1px 0 0 darken($input-bg-color,10%);
+      overflow: hidden;
+      left: 0;
+      top: $input-top;
+      width: $width;
+      outline: none;
+      height: $input-height;
+      margin: 0;
+      padding: 0;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      pointer-events: all;
+      position: relative;
+      z-index: 1;
+      outline: 0;
+      -webkit-appearance: none;
+      width: $input-height;
+      height: $input-height;
+      border: none;
+      border-radius: $input-border-radius;
+      background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, lighten($input-thumb-color,60%)), color-stop(100%, $input-thumb-color)); /* android <= 2.2 */
+      background-image: -webkit-linear-gradient(top , lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); /* older mobile safari and android > 2.2 */;
+      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); /* W3C */
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      pointer-events: all;
+      position: relative;
+      z-index: 10;
+      -moz-appearance: none;
+      width: $input-height;
+      height: $input-height;
+      border: none;
+      border-radius: $input-border-radius;
+      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); /* W3C */
+    }
+
+    input[type="range"]::-ms-thumb {
+      pointer-events: all;
+      position: relative;
+      z-index: 10;
+      -ms-appearance: none;
+      width: $input-height;
+      height: $input-height;
+      border-radius: $input-border-radius;
+      border: 0;
+      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); /* W3C */
+    }
+
+    input[type=range]::-moz-range-track {
+      position: relative;
+      z-index: -1;
+      background-color: rgba(0, 0, 0, 1);
+      border: 0;
+    }
+
+    input[type=range]:last-of-type::-moz-range-track {
+      -moz-appearance: none;
+      background: none transparent;
+      border: 0;
+    }
+
+    input[type=range]::-moz-focus-outer {
+      border: 0;
+    }
+  }
+
+  section.range-slider {
+    @include range-slider(100%, 50px, 5px, #F1EFEF, #413F41, left);
+  }
+
 </style>
