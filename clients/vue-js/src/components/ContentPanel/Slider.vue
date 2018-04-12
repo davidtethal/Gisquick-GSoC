@@ -47,14 +47,14 @@
         <span class="rangeValues"></span>
         <input
           @click="getNewUrl()"
-          v-model="sliderValue1"
+          v-model="unix1"
           :min="sliderMin"
           :max="sliderMax"
           :step="step"
           type="range">
         <input
           @click="getNewUrl()"
-          v-model="sliderValue"
+          v-model="unix2"
           :min="sliderMin"
           :max="sliderMax"
           :step="step"
@@ -74,15 +74,18 @@
         :return-value.sync="pickerDate1">
         <v-text-field
           slot="activator"
-          v-model="sliderValueDate1"
+          v-model="userDate1"
           prepend-icon="event"
           readonly
         ></v-text-field>
         <v-date-picker v-model="pickerDate1" no-title scrollable>
           <v-spacer></v-spacer>
-          <v-btn flat color="primary" @click="menu1 = false">Cancel</v-btn>
-          <v-btn flat color="primary" @click="$refs.menu1.save(pickerDate1); getNewUrl()">OK</v-btn>
+          <v-time-picker v-model="pickerTime1" format="24hr" no-title ></v-time-picker>
+          <v-btn flat color="primary" @click="menu1 = false; resetTime(1)">Cancel</v-btn>
+          <v-btn class="right" flat color="primary" @click="$refs.menu1.save(pickerDate1); getNewUrl()">OK</v-btn>
         </v-date-picker>
+        <div>
+        </div>
       </v-menu>
 
       <!--datepicker 2-->
@@ -98,14 +101,15 @@
         :return-value.sync="pickerDate2">
         <v-text-field
           slot="activator"
-          v-model="sliderValueDate"
+          v-model="userDate2"
           prepend-icon="event"
           readonly
         ></v-text-field>
         <v-date-picker v-model="pickerDate2" no-title scrollable>
           <v-spacer></v-spacer>
-          <v-btn flat color="primary" @click="menu2 = false">Cancel</v-btn>
-          <v-btn flat color="primary" @click="$refs.menu2.save(pickerDate2); getNewUrl()">OK</v-btn>
+          <v-time-picker v-model="pickerTime2" format="24hr" no-title ></v-time-picker>
+          <v-btn flat color="primary" @click="menu2 = false; resetTime(2)">Cancel</v-btn>
+          <v-btn class="right" flat color="primary" @click="$refs.menu2.save(pickerDate2); getNewUrl()">OK</v-btn>
         </v-date-picker>
       </v-menu>
 
@@ -126,22 +130,27 @@
     data () {
       return {
         layers: layersList(this.$project.layers, true),
+        dateMask: 'DD-MM-YYYY HH:mm', //this.$project.layers,
         layersSelection: [],
         attributesSelection: [],
         timeData: null,
-        sliderValue1: 0,
-        sliderValue: null,
-        sliderValueDate1: null,
-        sliderValueDate: null,
         attribute: null,
         sliderMin: 0,
         sliderMax: 0,
         openInfo: false,
+//        slider
+        unix1: 0,
+        unix2: null,
+        userDate1: null,
+        userDate2: null,
 //        datepicker
         pickerDate1: null,
-        menu1: false,
         pickerDate2: null,
-        menu2: false
+        menu1: false,
+        menu2: false,
+//        timepicker
+        pickerTime1: null,
+        pickerTime2: null,
       }
     },
 
@@ -154,7 +163,7 @@
         }
       },
       step () {
-        console.log('STEP', (this.sliderMax - this.sliderMin) / 100)
+//        console.log('STEP', (this.sliderMax - this.sliderMin) / 100)
         return (this.sliderMax - this.sliderMin) / 100
       }
     },
@@ -164,7 +173,7 @@
         console.log(value)
         this.attributesSelection = []
         this.attribute = null
-        // todo timeData watch or trigger method
+        // todo timeData watch or trigger method not both
         // case of all layers
         if (value.selectAllLayers) {
           this.checkDiffAttributes()
@@ -173,11 +182,11 @@
             const minmax = this.getSliderRange(this.attributesSelection[0])
             this.sliderMin = minmax[0]
             this.sliderMax = minmax[1]
-            this.sliderValue1 = minmax[0]
-            this.sliderValue = minmax[0]
+            this.unix1 = minmax[0]
+            this.unix2 = minmax[0]
             this.openInfo = true
           }
-          // case of one layer
+        // case of one layer
         } else if (!value.selectAllLayers) {
           this.setSliderValue()
           this.sliderMin = this.timeData.timeValues[0]
@@ -203,41 +212,50 @@
           const minmax = this.getSliderRange(value)
           this.sliderMin = minmax[0]
           this.sliderMax = minmax[1]
-          this.sliderValue = minmax[0]
+          this.unix2 = minmax[0]
           this.openInfo = true
         }
       },
       // todo add min max into date pickers!!
       // todo set slider pushing!!
-      sliderValue1 (value) {
-        this.sliderValueDate1 = moment(value * 1000).format('DD-MM-YYYY')
-        this.pickerDate1 = moment(value * 1000).format('YYYY-MM-DD')
+      unix1 (val) {
+        this.userDate1 = moment(val * 1000).format(this.dateMask)
+        this.pickerDate1 = moment(val * 1000).format('YYYY-MM-DD')
+        this.pickerTime1 = moment(val * 1000).format('HH:mm')
       },
-      sliderValue (value) {
-        this.sliderValueDate = moment(value * 1000).format('DD-MM-YYYY')
-        this.pickerDate2 = moment(value * 1000).format('YYYY-MM-DD')
+      unix2 (val) {
+        this.userDate2 = moment(val * 1000).format(this.dateMask)
+        this.pickerDate2 = moment(val * 1000).format('YYYY-MM-DD')
+        this.pickerTime2 = moment(val * 1000).format('HH:mm')
       },
-      pickerDate1 () {
-        this.sliderValueDate1 = moment(this.pickerDate1).format('DD-MM-YYYY')
-        this.sliderValue1 = moment(this.pickerDate1,'YYYY-MM-DD').unix()
+      pickerDate1 (val) {
+        const dateAndTime = `${val}-${this.pickerTime1}`
+        this.unix1 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
       },
-      pickerDate2 () {
-        this.sliderValueDate = moment(this.pickerDate2).format('DD-MM-YYYY')
-        this.sliderValue = moment(this.pickerDate2,'YYYY-MM-DD').unix()
+      pickerDate2 (val) {
+        const dateAndTime = `${val}-${this.pickerTime2}`
+        this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
+      },
+      pickerTime1 (val) {
+        const dateAndTime = `${this.pickerDate1}-${val}`
+        this.unix1 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
+      },
+      pickerTime2 (val) {
+        const dateAndTime = `${this.pickerDate2}-${val}`
+        this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
       }
     },
 
     created () {
-
       // Initialize Sliders
-      var sliderSections = document.getElementsByClassName("range-slider");
-      for( var x = 0; x < sliderSections.length; x++ ){
-        var sliders = sliderSections[x].getElementsByTagName("input");
-        for( var y = 0; y < sliders.length; y++ ){
-          if( sliders[y].type ==="range" ){
-            sliders[y].oninput = this.getVals();
+      let sliderSections = document.getElementsByClassName('range-slider')
+      for (let x = 0; x < sliderSections.length; x++) {
+        let sliders = sliderSections[x].getElementsByTagName('input')
+        for (let y = 0; y < sliders.length; y++) {
+          if (sliders[y].type === 'range') {
+            sliders[y].oninput = this.getVals()
             // Manually trigger event first time to display values
-            sliders[y].oninput();
+            sliders[y].oninput()
           }
         }
       }
@@ -273,8 +291,8 @@
     beforeDestroy () {
       for (let i = 0; i < this.layers.length; i++) {
         this.layers[i].title = this.layers[i].name
-        delete this.layers[i].sliderValue1
-        delete this.layers[i].sliderValue
+        delete this.layers[i].unix1
+        delete this.layers[i].unix2
         delete this.layers[i].timeFilter
       }
       if (this.originalLayer) {
@@ -300,15 +318,15 @@
       },
       // initialize slider by last used value
       setSliderValue () {
-        if (this.layerModel.sliderValue1) {
-          this.sliderValue1 = this.layerModel.sliderValue1
+        if (this.layerModel.unix1) {
+          this.unix1 = this.layerModel.unix1
         } else {
-          this.sliderValue1 = this.timeData.timeValues[0]
+          this.unix1 = this.timeData.timeValues[0]
         }
-        if (this.layerModel.sliderValue) {
-          this.sliderValue = this.layerModel.sliderValue
+        if (this.layerModel.unix2) {
+          this.unix2 = this.layerModel.unix2
         } else {
-          this.sliderValue = this.timeData.timeValues[0]
+          this.unix2 = this.timeData.timeValues[0]
         }
       },
       // make filter for non selected time layers
@@ -333,39 +351,36 @@
       updateSingleLayer () {
         console.log('SINGLE')
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
-//        const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" < '${this.sliderValue}'`
-        const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" >= '${this.sliderValue1}' AND "${this.timeData.timeAttribute}" <= '${this.sliderValue}'`
+        const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" >= '${this.unix1}' AND "${this.timeData.timeAttribute}" <= '${this.unix2}'`
         const filter = `${modelFilter}${otherLayerFilter}`
-//        console.log(filter)
-        this.layer.getSource().updateParams({'FILTER': filter})
-        this.layerModel.title = `${this.timeData.name}-${this.sliderValue}`
-        this.layerModel.sliderValue1 = this.sliderValue1
-        this.layerModel.sliderValue = this.sliderValue
+        this.layerModel.title = `${this.timeData.name}-${this.unix2}`
+        this.layerModel.unix1 = this.unix1
+        this.layerModel.unix2 = this.unix2
         this.layerModel.timeFilter = modelFilter
-//        console.log(this.layerModel)
+        this.oldPickerTime1 = moment(this.unix1 * 1000).format('HH:mm')
+        this.oldPickerTime2 = moment(this.unix2 * 1000).format('HH:mm')
+        this.layer.getSource().updateParams({'FILTER': filter})
       },
       updateMultipleLayers () {
         console.log('MULTIPLE')
         const attribute = this.attribute || this.attributesSelection[0]
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute)
-        console.log(visibleLayers)
         let filterIncrement = ''
         let filter = ''
         for (let i = 0; i < visibleLayers.length; i++) {
-          console.log(visibleLayers[i].name)
           if (visibleLayers[i].original_time_attribute === attribute) {
-//            filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].timeAttribute}" < '${this.sliderValue}'`
-            filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].timeAttribute}" >= '${this.sliderValue1}' AND "${visibleLayers[i].timeAttribute}" <= '${this.sliderValue}'`
+            filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].timeAttribute}" >= '${this.unix1}' AND "${visibleLayers[i].timeAttribute}" <= '${this.unix2}'`
             filter += filterIncrement
-            visibleLayers[i].title = `${visibleLayers[i].name}-${this.sliderValue}`
-            visibleLayers[i].sliderValue1 = this.sliderValue1
-            visibleLayers[i].sliderValue = this.sliderValue
+            visibleLayers[i].title = `${visibleLayers[i].name}-${this.unix2}`
+            visibleLayers[i].unix1 = this.unix1
+            visibleLayers[i].unix2 = this.unix2
             visibleLayers[i].timeFilter = filterIncrement
           } else {
             filter += `;${visibleLayers[i].timeFilter}`
           }
         }
-        console.log(filter)
+        this.oldPickerTime1 = moment(this.unix1 * 1000).format('HH:mm')
+        this.oldPickerTime2 = moment(this.unix2 * 1000).format('HH:mm')
         this.layer.getSource().updateParams({'FILTER': filter})
       },
       // add "All visible layers" option into layers select
@@ -386,7 +401,6 @@
       },
       // get min and max slider range
       getSliderRange (attribute) {
-        console.log(attribute)
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute && l.original_time_attribute === attribute)
         // set min max values
         let min = 1E+100
@@ -404,7 +418,6 @@
       resetAttribute () {
         this.attribute = null
         this.openInfo = false
-        console.log(this.attribute)
         this.attributesSelection = []
         this.checkDiffAttributes()
         if (this.attributesSelection.length === 1) {
@@ -412,28 +425,60 @@
           const minmax = this.getSliderRange(this.attributesSelection[0])
           this.sliderMin = minmax[0]
           this.sliderMax = minmax[1]
-          this.sliderValue1 = minmax[0]
-          this.sliderValue = minmax[0]
+          this.unix1 = minmax[0]
+          this.unix2 = minmax[0]
           this.openInfo = true
         }
       },
       getVals () {
         // Get slider values
-        var parent = this.parentNode;
-        var slides = parent.getElementsByTagName("input");
-        var slide1 = parseFloat( slides[0].value );
-        var slide2 = parseFloat( slides[1].value );
+        let parent = this.parentNode
+        let slides = parent.getElementsByTagName('input')
+        let slide1 = parseFloat(slides[0].value)
+        let slide2 = parseFloat(slides[1].value)
         // Neither slider will clip the other, so make sure we determine which is larger
-        if( slide1 > slide2 ){ var tmp = slide2; slide2 = slide1; slide1 = tmp; }
-
-        var displayElement = parent.getElementsByClassName("rangeValues")[0];
-        displayElement.innerHTML = "$ " + slide1 + "k - $" + slide2 + "k";
+        if (slide1 > slide2) {
+          let tmp = slide2
+          slide2 = slide1
+          slide1 = tmp
+        }
+        let displayElement = parent.getElementsByClassName('rangeValues')[0]
+//        displayElement.innerHTML = "$ " + slide1 + "k - $" + slide2 + "k";
+        displayElement.innerHTML = `$ ${slide1}k - $${slide2}k`
+      },
+      resetTime (num) {
+        if (num === 1) {
+          const dateAndTime = `${this.pickerDate1}-${this.oldPickerTime1}`
+          this.unix1 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
+        } else {
+          const dateAndTime = `${this.pickerDate2}-${this.oldPickerTime2}`
+          this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
+        }
       }
     }
   }
 </script>
 
 <style lang="scss">
+
+  /*time picker*/
+
+  .picker__actions {
+    display: block;
+    padding: 8px 0;
+  }
+
+  .picker--time {
+    margin: 0;
+  }
+
+  .picker {
+    display: inherit;
+  }
+
+  .right {
+    float: right;
+  }
 
   /*slider*/
   @mixin range-slider($width, $height, $input-top, $input-bg-color, $input-thumb-color, $float:none, $input-height:20px, $input-border-radius:14px) {
