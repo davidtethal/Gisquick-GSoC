@@ -82,7 +82,7 @@
           v-model="pickerDate1"
           no-title
           scrollable
-          :min="pickerMinMax[0]"
+          :min="datePickerMinMax[0]"
           :max="pickerDate2">
           <v-spacer></v-spacer>
           <v-time-picker
@@ -124,7 +124,7 @@
           no-title
           scrollable
           :min="pickerDate1"
-          :max="pickerMinMax[1]">
+          :max="datePickerMinMax[1]">
           <v-spacer></v-spacer>
           <v-time-picker v-if="hasTime" v-model="pickerTime2" format="24hr" no-title ></v-time-picker>
           <v-btn flat color="primary" @click="menu2 = false; resetTime(2)">
@@ -153,25 +153,31 @@
     data () {
       return {
         layers: layersList(this.$project.layers, true),
-//        dateMask: 'DD-MM-YYYY HH:mm', //this.$project.layers,
-        layersSelection: [],
-        attributesSelection: [],
         timeData: null,
         attribute: null,
-        sliderMin: 0,
-        sliderMax: 0,
         openInfo: false,
-//        slider
+
+        // selects lists
+        layersSelection: [],
+        attributesSelection: [],
+
+        // unix time
         unix1: 0,
         unix2: null,
+
+        // slider
         userDate1: null,
         userDate2: null,
-//        datepicker
+        sliderMin: 0,
+        sliderMax: 0,
+
+        // datepicker
         pickerDate1: null,
         pickerDate2: null,
         menu1: false,
         menu2: false,
-//        timepicker
+
+        // timepicker
         pickerTime1: null,
         pickerTime2: null
       }
@@ -188,8 +194,7 @@
       step () {
         return (this.sliderMax - this.sliderMin) / 100
       },
-      pickerMinMax () {
-        console.log('CHANGE')
+      datePickerMinMax () {
         const min = moment(this.sliderMin * 1000).format('YYYY-MM-DD')
         const max = moment(this.sliderMax * 1000).format('YYYY-MM-DD')
         return [min, max]
@@ -197,20 +202,20 @@
     },
 
     watch: {
+      // triggers after layer is selected
       timeData (value) {
-        console.log(value)
-
         this.attributesSelection = []
         this.attribute = null
 
-        // todo timeData watch or trigger method not both
         // case of all layers
         if (value.selectAllLayers) {
           this.checkMultipleAttributes()
+
           // case of one attribute
           if (this.attributesSelection.length === 1) {
             this.initializeSlider(this.attributesSelection[0])
           }
+
         // case of one layer
         } else if (!value.selectAllLayers) {
           this.dateMask = value.date_mask
@@ -222,24 +227,18 @@
           this.getNewUrl()
         }
       },
-      layerModel (model, oldModel) {
-/*
-        if (oldModel) {
-          this.resetLayerTitle(oldModel)
-        }
-*/
-//        model._title = model.title
+      // contain currently selected layer
+      layerModel (model) {
         if (!model.visible) {
           this.setModelVisibility(model, true)
         }
       },
       attribute (value) {
-        console.log('ATTRIBUTE', value)
         if (value) {
           this.initializeSlider(value)
         }
       },
-      // todo set slider pushing!!
+      // slider values
       unix1 (val) {
         this.userDate1 = moment(val * 1000).format(this.dateMask)
         this.pickerDate1 = moment(val * 1000).format('YYYY-MM-DD')
@@ -256,6 +255,7 @@
           this.unix1 = parseInt(val) - this.step
         }
       },
+      // date picker
       pickerDate1 (val) {
         const dateAndTime = `${val}-${this.pickerTime1}`
         this.unix1 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
@@ -264,6 +264,7 @@
         const dateAndTime = `${val}-${this.pickerTime2}`
         this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
       },
+      // time picker
       pickerTime1 (val) {
         const dateAndTime = `${this.pickerDate1}-${val}`
         this.unix1 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
@@ -275,20 +276,22 @@
     },
 
     created () {
-      // Initialize Sliders
+      // initialize sliders
       let sliderSections = document.getElementsByClassName('range-slider')
       for (let x = 0; x < sliderSections.length; x++) {
         let sliders = sliderSections[x].getElementsByTagName('input')
         for (let y = 0; y < sliders.length; y++) {
           if (sliders[y].type === 'range') {
-            sliders[y].oninput = this.getVals()
-            // Manually trigger event first time to display values
+            sliders[y].oninput = this.getSliderVals()
             sliders[y].oninput()
           }
         }
       }
 
+      // add "select all layers" into layer select
       this.addAllIntoSelection()
+
+      // disable map cashing
       const map = this.$map
       if (!(map.overlay instanceof ImageLayer)) {
         // create and switch to WMS layer
@@ -310,13 +313,15 @@
             ratio: 1
           })
         })
+
+        // set as new main map's layer
         map.addLayer(this.layer)
-        // set as new main map's layer - required to control layers visibility in Content panel
         map.overlay = this.layer
       }
     },
 
     beforeDestroy () {
+      // remove all extra parameters and reset names
       for (let i = 0; i < this.layers.length; i++) {
         this.layers[i].title = this.layers[i].name
         delete this.layers[i].unix1
@@ -452,14 +457,17 @@
         }
         return [min, max]
       },
+      // in case that one layer is selected twice
       resetAttribute () {
-        this.attribute = null
-        this.openInfo = false
-        this.attributesSelection = []
-        this.checkMultipleAttributes()
-        if (this.attributesSelection.length === 1) {
-          this.attribute = this.attributesSelection[0]
-          this.initializeSlider(this.attributesSelection[0])
+        if (this.timeData && this.timeData.selectAllLayers) {
+          this.attribute = null
+          this.openInfo = false
+          this.attributesSelection = []
+          this.checkMultipleAttributes()
+          if (this.attributesSelection.length === 1) {
+            this.attribute = this.attributesSelection[0]
+            this.initializeSlider(this.attributesSelection[0])
+          }
         }
       },
       // set date mask in cas of multiple layers
@@ -474,18 +482,18 @@
         this.dateMask = visibleLayers[0].date_mask
         this.hasTime = false
       },
-      getVals () {
-        // Get slider values
+      // double slider range functionality
+      getSliderVals () {
+        // get slider values
         let parent = this.parentNode
         let slides = parent.getElementsByTagName('input')
         let slide1 = parseFloat(slides[0].value)
         let slide2 = parseFloat(slides[1].value)
-        // Neither slider will clip the other, so make sure we determine which is larger
-        if (slide1 > slide2) {
+        /*if (slide1 > slide2) {
           let tmp = slide2
           slide2 = slide1
           slide1 = tmp
-        }
+        }*/
         let displayElement = parent.getElementsByClassName('rangeValues')[0]
         displayElement.innerHTML = `$ ${slide1}k - $${slide2}k`
       },
