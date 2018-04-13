@@ -173,7 +173,7 @@
         menu2: false,
 //        timepicker
         pickerTime1: null,
-        pickerTime2: null,
+        pickerTime2: null
       }
     },
 
@@ -214,7 +214,7 @@
         // case of one layer
         } else if (!value.selectAllLayers) {
           this.dateMask = value.date_mask
-          this.hasTime =  this.dateMask.includes('HH:mm')
+          this.hasTime = this.dateMask.includes('HH:mm')
           this.setSliderValue()
           this.sliderMin = this.timeData.timeValues[0]
           this.sliderMax = this.timeData.timeValues[1]
@@ -239,17 +239,22 @@
           this.initializeSlider(value)
         }
       },
-      // todo add min max into date pickers!!
       // todo set slider pushing!!
       unix1 (val) {
         this.userDate1 = moment(val * 1000).format(this.dateMask)
         this.pickerDate1 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime1 = moment(val * 1000).format('HH:mm')
+        if (val >= this.unix2 - this.step) {
+          this.unix2 = parseInt(val) + this.step
+        }
       },
       unix2 (val) {
         this.userDate2 = moment(val * 1000).format(this.dateMask)
         this.pickerDate2 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime2 = moment(val * 1000).format('HH:mm')
+        if (val <= this.unix1 + this.step) {
+          this.unix1 = parseInt(val) - this.step
+        }
       },
       pickerDate1 (val) {
         const dateAndTime = `${val}-${this.pickerTime1}`
@@ -340,7 +345,7 @@
         this.layer.getSource().setVisibleLayers(visibleLayers.map(l => l.name))
       },
       // initialize slider min,max and values -- multiple layers
-      initializeSlider(attribute) {
+      initializeSlider (attribute) {
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute && l.original_time_attribute === attribute)
         this.setDateMask(visibleLayers)
         const minmax = this.getSliderRange(visibleLayers)
