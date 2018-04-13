@@ -136,7 +136,16 @@
         </v-date-picker>
       </v-menu>
 
-
+      <v-btn
+        v-if="animateStop"
+        @click="animate(animateStop)">
+        play
+      </v-btn>
+      <v-btn
+        v-if="!animateStop"
+        @click="animate(animateStop)">
+        stop
+      </v-btn>
     </div>
   </div>
 </template>
@@ -179,7 +188,11 @@
 
         // timepicker
         pickerTime1: null,
-        pickerTime2: null
+        pickerTime2: null,
+
+        // animate
+        animateStop: true,
+        frameRate: 1 // sec
       }
     },
 
@@ -276,7 +289,7 @@
     },
 
     created () {
-      // initialize sliders
+      // initialize sliders https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
       let sliderSections = document.getElementsByClassName('range-slider')
       for (let x = 0; x < sliderSections.length; x++) {
         let sliders = sliderSections[x].getElementsByTagName('input')
@@ -482,18 +495,20 @@
         this.dateMask = visibleLayers[0].date_mask
         this.hasTime = false
       },
-      // double slider range functionality
+      // double slider range functionality https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
       getSliderVals () {
         // get slider values
         let parent = this.parentNode
         let slides = parent.getElementsByTagName('input')
         let slide1 = parseFloat(slides[0].value)
         let slide2 = parseFloat(slides[1].value)
-        /*if (slide1 > slide2) {
+/*
+        if (slide1 > slide2) {
           let tmp = slide2
           slide2 = slide1
           slide1 = tmp
-        }*/
+        }
+*/
         let displayElement = parent.getElementsByClassName('rangeValues')[0]
         displayElement.innerHTML = `$ ${slide1}k - $${slide2}k`
       },
@@ -506,7 +521,27 @@
           const dateAndTime = `${this.pickerDate2}-${this.oldPickerTime2}`
           this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
         }
+      },
+      // simple animation
+      animate (play) {
+        if (play) {
+          this.animateStop = false
+          this.newFrame()
+        } else {
+          this.animateStop = true
+        }
+      },
+      newFrame () {
+        this.unix2 += this.step
+        this.getNewUrl()
+        if (this.unix2 > this.sliderMax) {
+          this.animateStop = true
+        }
+        if (!this.animateStop) {
+          setTimeout(this.newFrame, this.frameRate * 1000)
+        }
       }
+
     }
   }
 </script>
@@ -533,6 +568,7 @@
   }
 
   /*slider*/
+
   @mixin range-slider($width, $height, $input-top, $input-bg-color, $input-thumb-color, $float:none, $input-height:20px, $input-border-radius:14px) {
     position: relative;
     width: $width;
