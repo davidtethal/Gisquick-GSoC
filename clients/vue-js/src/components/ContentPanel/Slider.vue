@@ -130,7 +130,7 @@
     data () {
       return {
         layers: layersList(this.$project.layers, true),
-        dateMask: 'DD-MM-YYYY HH:mm', //this.$project.layers,
+//        dateMask: 'DD-MM-YYYY HH:mm', //this.$project.layers,
         layersSelection: [],
         attributesSelection: [],
         timeData: null,
@@ -168,29 +168,24 @@
     },
 
     watch: {
-      timeData (value, oldValue) {
+      timeData (value) {
         console.log(value)
-
-        this.hasTime =  this.dateMask.includes('HH')
-        console.log(this.hasTime)
 
         this.attributesSelection = []
         this.attribute = null
+
         // todo timeData watch or trigger method not both
         // case of all layers
         if (value.selectAllLayers) {
-          this.checkDiffAttributes()
+          this.checkMultipleAttributes()
           // case of one attribute
           if (this.attributesSelection.length === 1) {
-            const minmax = this.getSliderRange(this.attributesSelection[0])
-            this.sliderMin = minmax[0]
-            this.sliderMax = minmax[1]
-            this.unix1 = minmax[0]
-            this.unix2 = minmax[0]
-            this.openInfo = true
+            this.initializeSlider(this.attributesSelection[0])
           }
         // case of one layer
         } else if (!value.selectAllLayers) {
+          this.dateMask = value.date_mask
+          this.hasTime =  this.dateMask.includes('HH:mm')
           this.setSliderValue()
           this.sliderMin = this.timeData.timeValues[0]
           this.sliderMax = this.timeData.timeValues[1]
@@ -212,11 +207,7 @@
       attribute (value) {
         console.log('ATTRIBUTE', value)
         if (value) {
-          const minmax = this.getSliderRange(value)
-          this.sliderMin = minmax[0]
-          this.sliderMax = minmax[1]
-          this.unix2 = minmax[0]
-          this.openInfo = true
+          this.initializeSlider(value)
         }
       },
       // todo add min max into date pickers!!
@@ -309,7 +300,7 @@
     },
 
     methods: {
-      // make selected layer visible
+      // set selected layer visible
       setModelVisibility (model, visible) {
         const visibleLayers = this.$overlays.list.filter(l => l.visible)
         if (visible && !model.selectAllLayers) {
@@ -319,7 +310,18 @@
         }
         this.layer.getSource().setVisibleLayers(visibleLayers.map(l => l.name))
       },
-      // initialize slider by last used value
+      // initialize slider min,max and values -- multiple layers
+      initializeSlider(attribute) {
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute && l.original_time_attribute === attribute)
+        this.setDateMask(visibleLayers)
+        const minmax = this.getSliderRange(visibleLayers)
+        this.sliderMin = minmax[0]
+        this.sliderMax = minmax[1]
+        this.unix1 = minmax[0]
+        this.unix2 = minmax[0]
+        this.openInfo = true
+      },
+      // set slider values by last used one
       setSliderValue () {
         if (this.layerModel.unix1) {
           this.unix1 = this.layerModel.unix1
@@ -397,15 +399,13 @@
         this.$project.layers.forEach(l => { this.layersSelection.push(l) })
       },
       // find unique attributes
-      checkDiffAttributes () {
+      checkMultipleAttributes () {
         this.openInfo = false
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute)
         this.attributesSelection = [...new Set(visibleLayers.map(l => l.original_time_attribute))]
       },
       // get min and max slider range
-      getSliderRange (attribute) {
-        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute && l.original_time_attribute === attribute)
-        // set min max values
+      getSliderRange (visibleLayers) {
         let min = 1E+100
         let max = -1E+100
         for (let i = 0; i < visibleLayers.length; i++) {
@@ -422,16 +422,25 @@
         this.attribute = null
         this.openInfo = false
         this.attributesSelection = []
-        this.checkDiffAttributes()
+        this.checkMultipleAttributes()
         if (this.attributesSelection.length === 1) {
           this.attribute = this.attributesSelection[0]
-          const minmax = this.getSliderRange(this.attributesSelection[0])
-          this.sliderMin = minmax[0]
-          this.sliderMax = minmax[1]
-          this.unix1 = minmax[0]
-          this.unix2 = minmax[0]
-          this.openInfo = true
+          this.initializeSlider(this.attributesSelection[0])
         }
+      },
+      // set date mask in cas of multiple layers
+      setDateMask (visibleLayers) {
+        for (let i = 0; i < visibleLayers.length; i++) {
+          if (visibleLayers[i].date_mask.includes('HH:mm')) {
+            console.log('TIME', visibleLayers[i].date_mask)
+            this.dateMask = visibleLayers[i].date_mask
+            this.hasTime = true
+            return
+          }
+        }
+        console.log('NOTIME', visibleLayers[0].date_mask)
+        this.dateMask = visibleLayers[0].date_mask
+        this.hasTime = false
       },
       getVals () {
         // Get slider values
@@ -446,9 +455,9 @@
           slide1 = tmp
         }
         let displayElement = parent.getElementsByClassName('rangeValues')[0]
-//        displayElement.innerHTML = "$ " + slide1 + "k - $" + slide2 + "k";
         displayElement.innerHTML = `$ ${slide1}k - $${slide2}k`
       },
+      // set old time from date picker in case of "cancel" button pressed
       resetTime (num) {
         if (num === 1) {
           const dateAndTime = `${this.pickerDate1}-${this.oldPickerTime1}`
