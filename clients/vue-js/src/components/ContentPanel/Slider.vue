@@ -80,7 +80,7 @@
         ></v-text-field>
         <v-date-picker v-model="pickerDate1" no-title scrollable>
           <v-spacer></v-spacer>
-          <v-time-picker v-model="pickerTime1" format="24hr" no-title ></v-time-picker>
+          <v-time-picker v-if="hasTime" v-model="pickerTime1" format="24hr" no-title ></v-time-picker>
           <v-btn flat color="primary" @click="menu1 = false; resetTime(1)">Cancel</v-btn>
           <v-btn class="right" flat color="primary" @click="$refs.menu1.save(pickerDate1); getNewUrl()">OK</v-btn>
         </v-date-picker>
@@ -107,7 +107,7 @@
         ></v-text-field>
         <v-date-picker v-model="pickerDate2" no-title scrollable>
           <v-spacer></v-spacer>
-          <v-time-picker v-model="pickerTime2" format="24hr" no-title ></v-time-picker>
+          <v-time-picker v-if="hasTime" v-model="pickerTime2" format="24hr" no-title ></v-time-picker>
           <v-btn flat color="primary" @click="menu2 = false; resetTime(2)">Cancel</v-btn>
           <v-btn class="right" flat color="primary" @click="$refs.menu2.save(pickerDate2); getNewUrl()">OK</v-btn>
         </v-date-picker>
@@ -163,7 +163,6 @@
         }
       },
       step () {
-//        console.log('STEP', (this.sliderMax - this.sliderMin) / 100)
         return (this.sliderMax - this.sliderMin) / 100
       }
     },
@@ -171,6 +170,10 @@
     watch: {
       timeData (value, oldValue) {
         console.log(value)
+
+        this.hasTime =  this.dateMask.includes('HH')
+        console.log(this.hasTime)
+
         this.attributesSelection = []
         this.attribute = null
         // todo timeData watch or trigger method not both
