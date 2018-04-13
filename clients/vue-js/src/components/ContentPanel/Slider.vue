@@ -192,7 +192,7 @@
 
         // animate
         animateStop: true,
-        frameRate: 1 // sec
+        frameRate: 0.3 // sec
       }
     },
 
@@ -334,6 +334,7 @@
     },
 
     beforeDestroy () {
+      this.animateStop = true
       // remove all extra parameters and reset names
       for (let i = 0; i < this.layers.length; i++) {
         this.layers[i].title = this.layers[i].name
@@ -472,6 +473,7 @@
       },
       // in case that one layer is selected twice
       resetAttribute () {
+        this.animateStop = true
         if (this.timeData && this.timeData.selectAllLayers) {
           this.attribute = null
           this.openInfo = false
@@ -532,11 +534,14 @@
         }
       },
       newFrame () {
-        this.unix2 += this.step
-        this.getNewUrl()
-        if (this.unix2 > this.sliderMax) {
+        if (this.unix2 < this.sliderMax) {
+          this.unix2 += this.step
+        } else if (this.unix1 < this.sliderMax - this.step) {
+          this.unix1 += this.step
+        } else {
           this.animateStop = true
         }
+        this.getNewUrl()
         if (!this.animateStop) {
           setTimeout(this.newFrame, this.frameRate * 1000)
         }
