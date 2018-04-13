@@ -78,11 +78,25 @@
           prepend-icon="event"
           readonly
         ></v-text-field>
-        <v-date-picker v-model="pickerDate1" no-title scrollable>
+        <v-date-picker
+          v-model="pickerDate1"
+          no-title
+          scrollable
+          :min="pickerMinMax[0]"
+          :max="pickerDate2">
           <v-spacer></v-spacer>
-          <v-time-picker v-if="hasTime" v-model="pickerTime1" format="24hr" no-title ></v-time-picker>
-          <v-btn flat color="primary" @click="menu1 = false; resetTime(1)">Cancel</v-btn>
-          <v-btn class="right" flat color="primary" @click="$refs.menu1.save(pickerDate1); getNewUrl()">OK</v-btn>
+          <v-time-picker
+            v-if="hasTime"
+            v-model="pickerTime1"
+            format="24hr"
+            no-title
+          ></v-time-picker>
+          <v-btn flat color="primary" @click="menu1 = false; resetTime(1)">
+            Cancel
+          </v-btn>
+          <v-btn class="right" flat color="primary" @click="$refs.menu1.save(pickerDate1); getNewUrl()">
+            OK
+          </v-btn>
         </v-date-picker>
         <div>
         </div>
@@ -105,11 +119,20 @@
           prepend-icon="event"
           readonly
         ></v-text-field>
-        <v-date-picker v-model="pickerDate2" no-title scrollable>
+        <v-date-picker
+          v-model="pickerDate2"
+          no-title
+          scrollable
+          :min="pickerDate1"
+          :max="pickerMinMax[1]">
           <v-spacer></v-spacer>
           <v-time-picker v-if="hasTime" v-model="pickerTime2" format="24hr" no-title ></v-time-picker>
-          <v-btn flat color="primary" @click="menu2 = false; resetTime(2)">Cancel</v-btn>
-          <v-btn class="right" flat color="primary" @click="$refs.menu2.save(pickerDate2); getNewUrl()">OK</v-btn>
+          <v-btn flat color="primary" @click="menu2 = false; resetTime(2)">
+            Cancel
+          </v-btn>
+          <v-btn class="right" flat color="primary" @click="$refs.menu2.save(pickerDate2); getNewUrl()">
+            OK
+          </v-btn>
         </v-date-picker>
       </v-menu>
 
@@ -164,6 +187,12 @@
       },
       step () {
         return (this.sliderMax - this.sliderMin) / 100
+      },
+      pickerMinMax () {
+        console.log('CHANGE')
+        const min = moment(this.sliderMin * 1000).format('YYYY-MM-DD')
+        const max = moment(this.sliderMax * 1000).format('YYYY-MM-DD')
+        return [min, max]
       }
     },
 
@@ -432,13 +461,11 @@
       setDateMask (visibleLayers) {
         for (let i = 0; i < visibleLayers.length; i++) {
           if (visibleLayers[i].date_mask.includes('HH:mm')) {
-            console.log('TIME', visibleLayers[i].date_mask)
             this.dateMask = visibleLayers[i].date_mask
             this.hasTime = true
             return
           }
         }
-        console.log('NOTIME', visibleLayers[0].date_mask)
         this.dateMask = visibleLayers[0].date_mask
         this.hasTime = false
       },
