@@ -79,6 +79,7 @@
           readonly
         ></v-text-field>
         <v-date-picker
+          v-bind:class="{ 'hide-child': !hasDate }"
           v-model="pickerDate1"
           no-title
           scrollable
@@ -120,13 +121,14 @@
           readonly
         ></v-text-field>
         <v-date-picker
+          v-bind:class="{ 'hide-child': !hasDate }"
           v-model="pickerDate2"
           no-title
           scrollable
           :min="pickerDate1"
           :max="datePickerMinMax[1]">
           <v-spacer></v-spacer>
-          <v-time-picker v-if="hasTime" v-model="pickerTime2" format="24hr" no-title ></v-time-picker>
+          <v-time-picker class="time-picker" v-if="hasTime" v-model="pickerTime2" format="24hr" no-title ></v-time-picker>
           <v-btn flat color="primary" @click="menu2 = false; resetTime(2)">
             Cancel
           </v-btn>
@@ -231,8 +233,9 @@
 
         // case of one layer
         } else if (!value.selectAllLayers) {
-          this.dateMask = value.date_mask
-          this.hasTime = this.dateMask.includes('HH:mm')
+          this.outputDateMask = value.output_datetime_mask
+          this.maskIncludeDate(this.outputDateMask)
+          this.hasTime = this.outputDateMask.includes('HH:mm')
           this.setSliderValue()
           this.sliderMin = this.timeData.timeValues[0]
           this.sliderMax = this.timeData.timeValues[1]
@@ -253,7 +256,7 @@
       },
       // slider values
       unix1 (val) {
-        this.userDate1 = moment(val * 1000).format(this.dateMask)
+        this.userDate1 = moment(val * 1000).format(this.outputDateMask)
         this.pickerDate1 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime1 = moment(val * 1000).format('HH:mm')
         if (val >= this.unix2 - this.step) {
@@ -261,7 +264,7 @@
         }
       },
       unix2 (val) {
-        this.userDate2 = moment(val * 1000).format(this.dateMask)
+        this.userDate2 = moment(val * 1000).format(this.outputDateMask)
         this.pickerDate2 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime2 = moment(val * 1000).format('HH:mm')
         if (val <= this.unix1 + this.step) {
@@ -363,10 +366,12 @@
         }
         this.layer.getSource().setVisibleLayers(visibleLayers.map(l => l.name))
       },
+
       // initialize slider min,max and values -- multiple layers
       initializeSlider (attribute) {
-        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute && l.original_time_attribute === attribute)
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute && l.original_time_attribute === attribute)
         this.setDateMask(visibleLayers)
+        this.maskIncludeDate(this.outputDateMask)
         const minmax = this.getSliderRange(visibleLayers)
         this.sliderMin = minmax[0]
         this.sliderMax = minmax[1]
@@ -374,6 +379,7 @@
         this.unix2 = minmax[0]
         this.openInfo = true
       },
+
       // set slider values by last used one
       setSliderValue () {
         if (this.layerModel.unix1) {
@@ -387,6 +393,7 @@
           this.unix2 = this.timeData.timeValues[0]
         }
       },
+
       // make filter for non selected time layers
       getFilterFromLayers (layers, layerModel) {
         const modelIndex = layers.indexOf(layerModel)
@@ -398,6 +405,7 @@
         }
         return filter
       },
+
       // update WMS url
       getNewUrl () {
         if (this.layerModel.selectAllLayers) {
@@ -406,10 +414,18 @@
           this.updateSingleLayer()
         }
       },
+
       updateSingleLayer () {
         console.log('SINGLE')
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
-        const modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" >= '${this.unix1}' AND "${this.timeData.timeAttribute}" <= '${this.unix2}'`
+        let modelFilter = ''
+        if (this.timeData.unix) {
+          modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" >= '${this.unix1}' AND "${this.timeData.timeAttribute}" <= '${this.unix2}'`
+        } else {
+          const dateTimeUnix1 = moment(this.unix1 * 1000).format(this.timeData.input_datetime_mask)
+          const dateTimeUnix2 = moment(this.unix2 * 1000).format(this.timeData.input_datetime_mask)
+          modelFilter = `${this.timeData.name}:"${this.timeData.original_time_attribute}" >= '${dateTimeUnix1}' AND "${this.timeData.original_time_attribute}" <= '${dateTimeUnix2}'`
+        }
         const filter = `${modelFilter}${otherLayerFilter}`
         this.layerModel.title = `${this.timeData.name}-${this.unix2}`
         this.layerModel.unix1 = this.unix1
@@ -419,15 +435,22 @@
         this.oldPickerTime2 = moment(this.unix2 * 1000).format('HH:mm')
         this.layer.getSource().updateParams({'FILTER': filter})
       },
+
       updateMultipleLayers () {
         console.log('MULTIPLE')
         const attribute = this.attribute || this.attributesSelection[0]
-        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute)
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
         let filterIncrement = ''
         let filter = ''
         for (let i = 0; i < visibleLayers.length; i++) {
           if (visibleLayers[i].original_time_attribute === attribute) {
-            filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].timeAttribute}" >= '${this.unix1}' AND "${visibleLayers[i].timeAttribute}" <= '${this.unix2}'`
+            if (visibleLayers[i].unix) {
+              filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].timeAttribute}" >= '${this.unix1}' AND "${visibleLayers[i].timeAttribute}" <= '${this.unix2}'`
+            } else {
+              const dateTimeUnix1 = moment(this.unix1 * 1000).format(visibleLayers[i].input_datetime_mask)
+              const dateTimeUnix2 = moment(this.unix2 * 1000).format(visibleLayers[i].input_datetime_mask)
+              filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].original_time_attribute}" >= '${dateTimeUnix1}' AND "${visibleLayers[i].original_time_attribute}" <= '${dateTimeUnix2}'`
+            }
             filter += filterIncrement
             visibleLayers[i].title = `${visibleLayers[i].name}-${this.unix2}`
             visibleLayers[i].unix1 = this.unix1
@@ -441,36 +464,7 @@
         this.oldPickerTime2 = moment(this.unix2 * 1000).format('HH:mm')
         this.layer.getSource().updateParams({'FILTER': filter})
       },
-      // add "All visible layers" option into layers select
-      addAllIntoSelection () {
-        const all = {
-          name: 'All visible layers',
-          title: 'All visible layers',
-          selectAllLayers: true
-        }
-        this.layersSelection.push(all)
-        this.$project.layers.forEach(l => { this.layersSelection.push(l) })
-      },
-      // find unique attributes
-      checkMultipleAttributes () {
-        this.openInfo = false
-        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.timeAttribute)
-        this.attributesSelection = [...new Set(visibleLayers.map(l => l.original_time_attribute))]
-      },
-      // get min and max slider range
-      getSliderRange (visibleLayers) {
-        let min = 1E+100
-        let max = -1E+100
-        for (let i = 0; i < visibleLayers.length; i++) {
-          if (min > visibleLayers[i].timeValues[0]) { // vl[i].timeAttribute && vl[i].timeAttribute === attribute &&
-            min = visibleLayers[i].timeValues[0]
-          }
-          if (max < visibleLayers[i].timeValues[1]) { // vl[i].timeAttribute && vl[i].timeAttribute === attribute &&
-            max = visibleLayers[i].timeValues[1]
-          }
-        }
-        return [min, max]
-      },
+
       // in case that one layer is selected twice
       resetAttribute () {
         this.animateStop = true
@@ -485,18 +479,60 @@
           }
         }
       },
+
+      // add "All visible layers" option into layers select
+      addAllIntoSelection () {
+        const all = {
+          name: 'All visible layers',
+          title: 'All visible layers',
+          selectAllLayers: true
+        }
+        this.layersSelection.push(all)
+        this.$project.layers.forEach(l => { this.layersSelection.push(l) })
+      },
+
+      // find unique attributes
+      checkMultipleAttributes () {
+        this.openInfo = false
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
+        this.attributesSelection = [...new Set(visibleLayers.map(l => l.original_time_attribute))]
+      },
+
+      // get min and max slider range
+      getSliderRange (visibleLayers) {
+        let min = 1E+100
+        let max = -1E+100
+        for (let i = 0; i < visibleLayers.length; i++) {
+          if (min > visibleLayers[i].timeValues[0]) { // vl[i].timeAttribute && vl[i].timeAttribute === attribute &&
+            min = visibleLayers[i].timeValues[0]
+          }
+          if (max < visibleLayers[i].timeValues[1]) { // vl[i].timeAttribute && vl[i].timeAttribute === attribute &&
+            max = visibleLayers[i].timeValues[1]
+          }
+        }
+        return [min, max]
+      },
+
       // set date mask in cas of multiple layers
       setDateMask (visibleLayers) {
         for (let i = 0; i < visibleLayers.length; i++) {
-          if (visibleLayers[i].date_mask.includes('HH:mm')) {
-            this.dateMask = visibleLayers[i].date_mask
+          if (visibleLayers[i].output_datetime_mask.includes('HH:mm') && visibleLayers[i].output_datetime_mask.includes('YYYY')) {
+            this.outputDateMask = visibleLayers[i].output_datetime_mask
             this.hasTime = true
             return
           }
         }
-        this.dateMask = visibleLayers[0].date_mask
+        for (let i = 0; i < visibleLayers.length; i++) {
+          if (visibleLayers[i].output_datetime_mask.includes('YYYY')) {
+            this.outputDateMask = visibleLayers[i].output_datetime_mask
+            this.hasTime = true
+            return
+          }
+        }
+        this.outputDateMask = visibleLayers[0].output_datetime_mask
         this.hasTime = false
       },
+
       // double slider range functionality https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
       getSliderVals () {
         // get slider values
@@ -504,16 +540,10 @@
         let slides = parent.getElementsByTagName('input')
         let slide1 = parseFloat(slides[0].value)
         let slide2 = parseFloat(slides[1].value)
-/*
-        if (slide1 > slide2) {
-          let tmp = slide2
-          slide2 = slide1
-          slide1 = tmp
-        }
-*/
         let displayElement = parent.getElementsByClassName('rangeValues')[0]
         displayElement.innerHTML = `$ ${slide1}k - $${slide2}k`
       },
+
       // set old time from date picker in case of "cancel" button pressed
       resetTime (num) {
         if (num === 1) {
@@ -524,6 +554,7 @@
           this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
         }
       },
+
       // simple animation
       animate (play) {
         if (play) {
@@ -533,6 +564,7 @@
           this.animateStop = true
         }
       },
+
       newFrame () {
         if (this.unix2 < this.sliderMax) {
           this.unix2 += this.step
@@ -545,8 +577,20 @@
         if (!this.animateStop) {
           setTimeout(this.newFrame, this.frameRate * 1000)
         }
-      }
+      },
 
+      // check if mask includes year, month or days
+      maskIncludeDate (mask) {
+        if (
+          mask.includes('YYYY') || mask.includes('MM') || mask.includes('DD')
+        ) {
+          this.hasDate = true
+//          console.log('HAS DATE', this.hasDate)
+        } else {
+          this.hasDate = false
+//          console.log('HAS DATE', this.hasDate)
+        }
+      }
     }
   }
 </script>
@@ -554,6 +598,14 @@
 <style lang="scss">
 
   /*time picker*/
+
+  .hide-child > :first-child{
+    display: none;
+  }
+
+  .time-picker {
+    display: flex !important;
+  }
 
   .picker__actions {
     display: block;
