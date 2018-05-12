@@ -1,8 +1,8 @@
 <template>
   <div class="pa-2">
-    <!--layers drop box-->
-    <!--@change in case of selecting same option twice-->
 
+    <!--layers drop box-->
+    <!--used @change in case of selecting same option twice-->
     <v-select
       label="Select Time Layer"
       :items="layersSelection"
@@ -19,28 +19,6 @@
     <div v-if="openInfo">
       <p v-if="!attribute">time-attribute: {{timeData.original_time_attribute}}</p>
       <p v-if="attribute">time-attribute: {{attribute}}</p>
-      <!--<p v-for="time in timeValues">{{time}}</p>-->
-      <!--thumb-label-->
-<!--      <v-slider
-        ticks
-        @click="getNewUrl()"
-        v-model="sliderValue"
-        :min="sliderMin"
-        :max="sliderMax"
-        :step="step"
-        hide-details
-      />-->
-<!--      <div class="slidecontainer">
-        <input
-          type="range"
-          @click="getNewUrl()"
-          v-model="sliderValue"
-          :min="sliderMin"
-          :max="sliderMax"
-          :step="step"
-          class="slider"
-          id="myRange">
-      </div>-->
 
       <!--double range slider-->
       <section class="range-slider">
@@ -138,16 +116,31 @@
         </v-date-picker>
       </v-menu>
 
-      <v-btn
-        v-if="animateStop"
-        @click="animate(animateStop)">
-        play
-      </v-btn>
-      <v-btn
-        v-if="!animateStop"
-        @click="animate(animateStop)">
-        stop
-      </v-btn>
+      <!--animation-->
+      <v-flex xs12>
+          <v-layout row wrap>
+            <v-flex xs6>
+              <v-btn
+                v-if="animateStop"
+                @click="animate(animateStop)">
+                play
+              </v-btn>
+              <v-btn
+                v-if="!animateStop"
+                @click="animate(animateStop)">
+                stop
+              </v-btn>
+            </v-flex>
+            <v-flex xs6>
+              <v-switch
+                class="cumulatively"
+                :label="`cumulative`"
+                v-model="cumulatively"
+              ></v-switch>
+            </v-flex>
+          </v-layout>
+      </v-flex>
+
     </div>
   </div>
 </template>
@@ -160,6 +153,7 @@
   export default {
     inject: ['$map', '$project', '$overlays'],
     name: 'timeslide',
+    icon: 'tracking',
 
     data () {
       return {
@@ -194,7 +188,8 @@
 
         // animate
         animateStop: true,
-        frameRate: 0.3 // sec
+        frameRate: 1, // sec
+        cumulatively: false
       }
     },
 
@@ -237,8 +232,8 @@
           this.maskIncludeDate(this.outputDateMask)
           this.hasTime = this.outputDateMask.includes('HH:mm')
           this.setSliderValue()
-          this.sliderMin = this.timeData.timeValues[0]
-          this.sliderMax = this.timeData.timeValues[1]
+          this.sliderMin = this.timeData.time_values[0]
+          this.sliderMax = this.timeData.time_values[1]
           this.openInfo = true
           this.getNewUrl()
         }
@@ -372,6 +367,7 @@
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute && l.original_time_attribute === attribute)
         this.setDateMask(visibleLayers)
         this.maskIncludeDate(this.outputDateMask)
+        this.hasTime = this.outputDateMask.includes('HH:mm')
         const minmax = this.getSliderRange(visibleLayers)
         this.sliderMin = minmax[0]
         this.sliderMax = minmax[1]
@@ -385,12 +381,12 @@
         if (this.layerModel.unix1) {
           this.unix1 = this.layerModel.unix1
         } else {
-          this.unix1 = this.timeData.timeValues[0]
+          this.unix1 = this.timeData.time_values[0]
         }
         if (this.layerModel.unix2) {
           this.unix2 = this.layerModel.unix2
         } else {
-          this.unix2 = this.timeData.timeValues[0]
+          this.unix2 = this.timeData.time_values[0]
         }
       },
 
@@ -420,14 +416,14 @@
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
         let modelFilter = ''
         if (this.timeData.unix) {
-          modelFilter = `${this.timeData.name}:"${this.timeData.timeAttribute}" >= '${this.unix1}' AND "${this.timeData.timeAttribute}" <= '${this.unix2}'`
+          modelFilter = `${this.timeData.name}:"${this.timeData.time_attribute}" >= '${this.unix1}' AND "${this.timeData.time_attribute}" <= '${this.unix2}'`
         } else {
           const dateTimeUnix1 = moment(this.unix1 * 1000).format(this.timeData.input_datetime_mask)
           const dateTimeUnix2 = moment(this.unix2 * 1000).format(this.timeData.input_datetime_mask)
           modelFilter = `${this.timeData.name}:"${this.timeData.original_time_attribute}" >= '${dateTimeUnix1}' AND "${this.timeData.original_time_attribute}" <= '${dateTimeUnix2}'`
         }
         const filter = `${modelFilter}${otherLayerFilter}`
-        this.layerModel.title = `${this.timeData.name}-${this.unix2}`
+        this.layerModel.title = `${this.timeData.name}-${moment(this.unix1 * 1000).format(this.outputDateMask)}`
         this.layerModel.unix1 = this.unix1
         this.layerModel.unix2 = this.unix2
         this.layerModel.timeFilter = modelFilter
@@ -445,14 +441,14 @@
         for (let i = 0; i < visibleLayers.length; i++) {
           if (visibleLayers[i].original_time_attribute === attribute) {
             if (visibleLayers[i].unix) {
-              filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].timeAttribute}" >= '${this.unix1}' AND "${visibleLayers[i].timeAttribute}" <= '${this.unix2}'`
+              filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].time_attribute}" >= '${this.unix1}' AND "${visibleLayers[i].time_attribute}" <= '${this.unix2}'`
             } else {
               const dateTimeUnix1 = moment(this.unix1 * 1000).format(visibleLayers[i].input_datetime_mask)
               const dateTimeUnix2 = moment(this.unix2 * 1000).format(visibleLayers[i].input_datetime_mask)
               filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].original_time_attribute}" >= '${dateTimeUnix1}' AND "${visibleLayers[i].original_time_attribute}" <= '${dateTimeUnix2}'`
             }
             filter += filterIncrement
-            visibleLayers[i].title = `${visibleLayers[i].name}-${this.unix2}`
+            visibleLayers[i].title = `${visibleLayers[i].name}-${moment(this.unix1 * 1000).format(this.outputDateMask)}`
             visibleLayers[i].unix1 = this.unix1
             visibleLayers[i].unix2 = this.unix2
             visibleLayers[i].timeFilter = filterIncrement
@@ -467,6 +463,7 @@
 
       // in case that one layer is selected twice
       resetAttribute () {
+        this.cumulatively = false;
         this.animateStop = true
         if (this.timeData && this.timeData.selectAllLayers) {
           this.attribute = null
@@ -503,11 +500,11 @@
         let min = 1E+100
         let max = -1E+100
         for (let i = 0; i < visibleLayers.length; i++) {
-          if (min > visibleLayers[i].timeValues[0]) { // vl[i].timeAttribute && vl[i].timeAttribute === attribute &&
-            min = visibleLayers[i].timeValues[0]
+          if (min > visibleLayers[i].time_values[0]) {
+            min = visibleLayers[i].time_values[0]
           }
-          if (max < visibleLayers[i].timeValues[1]) { // vl[i].timeAttribute && vl[i].timeAttribute === attribute &&
-            max = visibleLayers[i].timeValues[1]
+          if (max < visibleLayers[i].time_values[1]) {
+            max = visibleLayers[i].time_values[1]
           }
         }
         return [min, max]
@@ -565,13 +562,25 @@
         }
       },
 
+      // one animation step
       newFrame () {
-        if (this.unix2 < this.sliderMax) {
-          this.unix2 += this.step
-        } else if (this.unix1 < this.sliderMax - this.step) {
-          this.unix1 += this.step
+        if (this.cumulatively) {
+          if (this.unix2 < this.sliderMax - this.step) {
+            this.unix2 += this.step
+          } else if (this.unix1 < this.sliderMax - 2 * this.step) {
+            this.unix1 += this.step
+          } else {
+            this.animateStop = true
+            return
+          }
         } else {
-          this.animateStop = true
+          if (this.unix2 < this.sliderMax - this.step) {
+            this.unix1 += this.step
+            this.unix2 += this.step
+          } else {
+            this.animateStop = true
+            return
+          }
         }
         this.getNewUrl()
         if (!this.animateStop) {
@@ -585,10 +594,8 @@
           mask.includes('YYYY') || mask.includes('MM') || mask.includes('DD')
         ) {
           this.hasDate = true
-//          console.log('HAS DATE', this.hasDate)
         } else {
           this.hasDate = false
-//          console.log('HAS DATE', this.hasDate)
         }
       }
     }
@@ -596,6 +603,11 @@
 </script>
 
 <style lang="scss">
+
+  /*cumulate switch*/
+  .cumulatively {
+    margin: 10px 0 -10px;
+  }
 
   /*time picker*/
 
