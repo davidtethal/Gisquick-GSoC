@@ -26,6 +26,7 @@
 <script>
 import Identification from './Identification'
 import Measure from './measure/Measure'
+import Slider from './ContentPanel/Slider'
 import Print from './print/Print'
 
 export default {
@@ -37,6 +38,7 @@ export default {
     this.tools = [
       Identification,
       Measure,
+      Slider,
       Print
     ]
   },

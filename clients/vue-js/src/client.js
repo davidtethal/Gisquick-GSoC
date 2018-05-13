@@ -41,6 +41,7 @@ HTTP.logout = function () {
 HTTP.project = function (project) {
   const opts = {
     transformResponse (text) {
+      // console.log('META', JSON.parse(text))
       const urlFields = ['mapcache_url', 'legend_url', 'ows_url']
       const data = JSON.parse(text)
       urlFields.forEach(param => {
