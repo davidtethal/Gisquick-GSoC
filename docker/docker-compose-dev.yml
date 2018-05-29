@@ -24,12 +24,3 @@ services:
       - DJANGO_GISQUICK_UPLOAD_MAX_SIZE='100M'
     ports:
       - "8000:8000"
-
-  vue:
-    build: ../clients/vue-js/
-    command: npm run dev
-    volumes:
-       - .:/../clients/vue-js/usr/app
-       - /../clients/vue-js/usr/app/node_modules
-    ports:
-       - "8080:8080"
