@@ -31,7 +31,7 @@ export default {
         HTTP
           .project(project)
           .then(resp => {
-            console.log(resp.data)
+//            console.log(resp.data)
             this.project = resp.data
           })
           .catch(resp => {

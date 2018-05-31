@@ -14,10 +14,22 @@ import Control from 'ol/control'
 import md5 from 'md5'
 
 
+// function createUrl (baseUrl, params = {}) {
+//   const url = new URL(baseUrl)
+//   Object.keys(params).forEach(k => url.searchParams.append(k, params[k]))
+//   return url
+// }
+
 function createUrl (baseUrl, params = {}) {
-  const url = new URL(baseUrl)
-  Object.keys(params).forEach(k => url.searchParams.append(k, params[k]))
-  return url
+  const [base, query = ''] = baseUrl.split('?')
+  const searchParams = new URLSearchParams(query)
+  Object.keys(params).forEach(k => searchParams.append(k, params[k]))
+  return {
+    searchParams,
+    get href () {
+      return `${base}?${searchParams.toString()}`
+    }
+  }
 }
 
 export class WebgisImageWMS extends ImageWMS {

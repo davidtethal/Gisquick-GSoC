@@ -287,6 +287,9 @@
     },
 
     created () {
+//      console.log('MAP')
+//      console.log(this.$map)
+//      console.log(this.$map.getLayer('qgislayer').getSource())
       // initialize sliders https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
       let sliderSections = document.getElementsByClassName('range-slider')
       for (let x = 0; x < sliderSections.length; x++) {
@@ -412,7 +415,7 @@
       },
 
       updateSingleLayer () {
-        console.log('SINGLE')
+//        console.log('SINGLE')
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
         let modelFilter = ''
         if (this.timeData.unix) {
@@ -433,7 +436,7 @@
       },
 
       updateMultipleLayers () {
-        console.log('MULTIPLE')
+//        console.log('MULTIPLE')
         const attribute = this.attribute || this.attributesSelection[0]
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
         let filterIncrement = ''
