@@ -132,16 +132,37 @@
             </v-btn>
           </v-flex>
           <v-flex xs6>
+            <v-icon class="animate-icon" @click="animationSettings = !animationSettings">settings</v-icon>
+          </v-flex>
+        </v-layout>
+
+        <scroll-area v-if="animationSettings">
+          <div class="item-container">
+            <p>cumulative</p>
+          </div>
+          <div class="item-container">
+            <p>cumulative</p>
+            <v-slider v-model="animationSpeed" step="1" min="0" max="4"></v-slider>
+          </div>
+        </scroll-area>
+
+       <!-- <v-layout row wrap v-if="animationSettings">
+          <v-flex xs6>
+            <p>cumulative</p>
+          </v-flex>
+          <v-flex xs6>
             <v-switch
-              class="cumulatively"
-              :label="`cumulative`"
               v-model="cumulatively"
             ></v-switch>
           </v-flex>
-        </v-layout>
-        <v-layout row wrap>
-          <v-slider  step="0"></v-slider>
-        </v-layout>
+          <v-flex xs6>
+            <p>speed</p>
+          </v-flex>
+          <v-flex xs6>
+            <v-slider  step="1" min="0" max="4"></v-slider>
+          </v-flex>
+
+        </v-layout>-->
       </v-flex>
 
     </div>
@@ -190,6 +211,8 @@
         pickerTime2: null,
 
         // animate
+        animationSpeed: 2,
+        animationSettings: false,
         animateStop: true,
         frameRate: 1, // sec
         cumulatively: false
@@ -286,6 +309,17 @@
       pickerTime2 (val) {
         const dateAndTime = `${this.pickerDate2}-${val}`
         this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
+      },
+      animationSpeed (val) {
+        console.log(val)
+        let speed = 0.2813 * val * val - 0.1875 * val + 0.25
+        if (val > 1) {
+          console.log(Math.floor(speed))
+          this.frameRate = Math.floor(speed)
+        } else {
+          console.log(speed)
+          this.frameRate = speed
+        }
       }
     },
 
@@ -616,6 +650,12 @@
     margin: 10px 0 -10px;
   }
 
+  /*animate icon*/
+  .animate-icon {
+    margin-top: 13px;
+    cursor: pointer;
+    color: gray !important;
+  }
   /*time picker*/
 
   .hide-child > :first-child{
