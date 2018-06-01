@@ -1,0 +1,214 @@
+{
+  "projection": {
+    "proj4": "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs", 
+    "code": "EPSG:3857", 
+    "is_geographic": false
+  }, 
+  "scales": [
+    18056, 
+    9028, 
+    4514, 
+    2257
+  ], 
+  "abstract": "", 
+  "zoom_extent": [
+    1596410.778, 
+    6475437.664, 
+    1603416.946, 
+    6478108.822
+  ], 
+  "fees": "conditions unknown", 
+  "message": null, 
+  "overlays": [
+    {
+      "drawing_order": 0, 
+      "projection": "EPSG:5514", 
+      "labels": false, 
+      "visible": true, 
+      "unix": true, 
+      "extent": [
+        1597719.78256726, 
+        6475501.262932664, 
+        1602182.672746132, 
+        6477586.07275257
+      ], 
+      "geom_type": "POLYGON", 
+      "time_attribute": "UTconvert", 
+      "name": "budovy-a", 
+      "output_datetime_mask": "YYYY-MM-DD HH:mm", 
+      "serverName": "", 
+      "queryable": false, 
+      "time_values": [
+        1309471200, 
+        1502920800
+      ], 
+      "hidden": false, 
+      "provider_type": "ogr", 
+      "type": "vector", 
+      "original_time_attribute": "PlatiOd", 
+      "metadata": {
+        "keyword_list": "", 
+        "abstract": "", 
+        "title": ""
+      }
+    }, 
+    {
+      "drawing_order": 1, 
+      "projection": "EPSG:5514", 
+      "labels": false, 
+      "visible": true, 
+      "unix": true, 
+      "extent": [
+        1598206.7761342244, 
+        6477051.581221866, 
+        1599854.557281334, 
+        6477908.92973699
+      ], 
+      "geom_type": "POLYGON", 
+      "time_attribute": "UTconvert", 
+      "name": "budovy-c", 
+      "output_datetime_mask": "YYYY-MM-DD", 
+      "serverName": "", 
+      "queryable": false, 
+      "time_values": [
+        1309471200, 
+        1507672800
+      ], 
+      "hidden": false, 
+      "provider_type": "ogr", 
+      "type": "vector", 
+      "original_time_attribute": "platiod", 
+      "metadata": {
+        "keyword_list": "", 
+        "abstract": "", 
+        "title": ""
+      }
+    }, 
+    {
+      "drawing_order": 2, 
+      "projection": "EPSG:5514", 
+      "labels": false, 
+      "visible": true, 
+      "unix": true, 
+      "extent": [
+        1597734.4936150098, 
+        6475502.729435845, 
+        1601040.3728726937, 
+        6477397.812025448
+      ], 
+      "geom_type": "POLYGON", 
+      "time_attribute": "UTconvert", 
+      "name": "budovy-b", 
+      "output_datetime_mask": "DD-MM-YYYY HH:mm", 
+      "serverName": "", 
+      "queryable": false, 
+      "time_values": [
+        1309471200, 
+        1507500000
+      ], 
+      "hidden": false, 
+      "provider_type": "ogr", 
+      "type": "vector", 
+      "original_time_attribute": "platiod", 
+      "metadata": {
+        "keyword_list": "", 
+        "abstract": "", 
+        "title": ""
+      }
+    }
+  ], 
+  "tile_resolutions": [
+    4.777314267158508, 
+    2.388657133579254, 
+    1.194328566789627, 
+    0.5971642833948135
+  ], 
+  "gislab_user": "tethal", 
+  "title": "husinec", 
+  "authentication": "all", 
+  "units": "meters", 
+  "selection_color": "#ffff00ff", 
+  "contact_phone": "", 
+  "topics": [
+    {
+      "abstract": "Default layers configuration", 
+      "visible_overlays": [
+        "budovy-a", 
+        "budovy-c", 
+        "budovy-b"
+      ], 
+      "title": "Default topic"
+    }
+  ], 
+  "measure_ellipsoid": "WGS84", 
+  "use_mapcache": true, 
+  "keyword_list": [], 
+  "contact_mail": "", 
+  "contact_organization": "", 
+  "position_precision": {
+    "automatic": true, 
+    "decimal_places": 2
+  }, 
+  "extent": [
+    1597719.78256726, 
+    6475501.262932664, 
+    1602182.672746132, 
+    6477908.92973699
+  ], 
+  "online_resource": "", 
+  "canvas_color": "#ffffffff", 
+  "composer_templates": [], 
+  "access_constrains": "None", 
+  "plugin_version": "1.1", 
+  "publish_date_unix": 1526805175, 
+  "publish_date": "Sun May 20 10:32:55 2018", 
+  "expiration": "", 
+  "contact_person": "", 
+  "extent_buffer": 0.0, 
+  "base_layers": [
+    {
+      "name": "Blank", 
+      "visible": true, 
+      "extent": [
+        1597719.78256726, 
+        6475501.262932664, 
+        1602182.672746132, 
+        6477908.92973699
+      ], 
+      "resolutions": [
+        4.777314267158508, 
+        2.388657133579254, 
+        1.194328566789627, 
+        0.5971642833948135
+      ], 
+      "type": "blank", 
+      "metadata": {
+        "keyword_list": "blank, world map", 
+        "abstract": "Blank base map layer."
+      }
+    }, 
+    {
+      "max_zoom_level": 18, 
+      "name": "OpenStreetMap", 
+      "visible": false, 
+      "extent": [
+        -16319611.284727, 
+        -5615981.3413867, 
+        16319611.284727, 
+        5615981.3413867
+      ], 
+      "resolutions": [
+        4.777314267158508, 
+        2.388657133579254, 
+        1.194328566789627, 
+        0.5971642833948135
+      ], 
+      "min_zoom_level": 15, 
+      "type": "osm", 
+      "metadata": {
+        "keyword_list": "free, collaborative, world map", 
+        "abstract": "OpenStreetMap (OSM) is a collaborative project to create a free editable map of the world."
+      }
+    }
+  ]
+}
