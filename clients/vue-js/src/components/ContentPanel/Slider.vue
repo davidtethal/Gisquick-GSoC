@@ -17,8 +17,8 @@
       v-model="attribute"
     />
     <div v-if="openInfo">
-      <p v-if="!attribute">time-attribute: {{timeData.original_time_attribute}}</p>
-      <p v-if="attribute">time-attribute: {{attribute}}</p>
+      <!--<p v-if="!attribute">time-attribute: {{timeData.original_time_attribute}}</p>-->
+      <!--<p v-if="attribute">time-attribute: {{attribute}}</p>-->
 
       <!--double range slider-->
       <section class="range-slider">
@@ -118,27 +118,30 @@
 
       <!--animation-->
       <v-flex xs12>
-          <v-layout row wrap>
-            <v-flex xs6>
-              <v-btn
-                v-if="animateStop"
-                @click="animate(animateStop)">
-                play
-              </v-btn>
-              <v-btn
-                v-if="!animateStop"
-                @click="animate(animateStop)">
-                stop
-              </v-btn>
-            </v-flex>
-            <v-flex xs6>
-              <v-switch
-                class="cumulatively"
-                :label="`cumulative`"
-                v-model="cumulatively"
-              ></v-switch>
-            </v-flex>
-          </v-layout>
+        <v-layout row wrap>
+          <v-flex xs6>
+            <v-btn
+              v-if="animateStop"
+              @click="animate(animateStop)">
+              play
+            </v-btn>
+            <v-btn
+              v-if="!animateStop"
+              @click="animate(animateStop)">
+              stop
+            </v-btn>
+          </v-flex>
+          <v-flex xs6>
+            <v-switch
+              class="cumulatively"
+              :label="`cumulative`"
+              v-model="cumulatively"
+            ></v-switch>
+          </v-flex>
+        </v-layout>
+        <v-layout row wrap>
+          <v-slider  step="0"></v-slider>
+        </v-layout>
       </v-flex>
 
     </div>
@@ -367,7 +370,7 @@
 
       // initialize slider min,max and values -- multiple layers
       initializeSlider (attribute) {
-        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute && l.original_time_attribute === attribute)
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)  // && l.original_time_attribute === attribute
         this.setDateMask(visibleLayers)
         this.maskIncludeDate(this.outputDateMask)
         this.hasTime = this.outputDateMask.includes('HH:mm')
@@ -442,7 +445,7 @@
         let filterIncrement = ''
         let filter = ''
         for (let i = 0; i < visibleLayers.length; i++) {
-          if (visibleLayers[i].original_time_attribute === attribute) {
+          if (visibleLayers[i].original_time_attribute === attribute || attribute === 'All attributes') {
             if (visibleLayers[i].unix) {
               filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].time_attribute}" >= '${this.unix1}' AND "${visibleLayers[i].time_attribute}" <= '${this.unix2}'`
             } else {
@@ -494,8 +497,9 @@
       // find unique attributes
       checkMultipleAttributes () {
         this.openInfo = false
-        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
-        this.attributesSelection = [...new Set(visibleLayers.map(l => l.original_time_attribute))]
+//        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
+//        this.attributesSelection = [...new Set(visibleLayers.map(l => l.original_time_attribute))]
+        this.attributesSelection.unshift('All attributes')
       },
 
       // get min and max slider range
