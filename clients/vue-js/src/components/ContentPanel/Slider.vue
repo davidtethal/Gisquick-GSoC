@@ -23,7 +23,7 @@
       <!--<p v-if="attribute">time-attribute: {{attribute}}</p>-->
 
       <!--double range slider-->
-      <!--<section class="range-slider">
+      <section class="range-slider">
         <span class="rangeValues"></span>
         <input
           @click="getNewUrl()"
@@ -39,7 +39,7 @@
           :max="sliderMax"
           :step="step"
           type="range">
-      </section>-->
+      </section>
 
       <!--datepicker 1-->
       <v-menu
@@ -340,21 +340,21 @@
 
     created () {
 //
-////      console.log('MAP')
-////      console.log(this.$map)
-////      console.log(this.$map.getLayer('qgislayer').getSource())
+//      console.log('MAP')
+//      console.log(this.$map)
+//      console.log(this.$map.getLayer('qgislayer').getSource())
 //
-//      // initialize sliders https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
-//      let sliderSections = document.getElementsByClassName('range-slider')
-//      for (let x = 0; x < sliderSections.length; x++) {
-//        let sliders = sliderSections[x].getElementsByTagName('input')
-//        for (let y = 0; y < sliders.length; y++) {
-//          if (sliders[y].type === 'range') {
-//            sliders[y].oninput = this.getSliderVals()
-//            sliders[y].oninput()
-//          }
-//        }
-//      }
+      // initialize sliders https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
+      let sliderSections = document.getElementsByClassName('range-slider')
+      for (let x = 0; x < sliderSections.length; x++) {
+        let sliders = sliderSections[x].getElementsByTagName('input')
+        for (let y = 0; y < sliders.length; y++) {
+          if (sliders[y].type === 'range') {
+            sliders[y].oninput = this.getSliderVals()
+            sliders[y].oninput()
+          }
+        }
+      }
 
       // add "select all layers" into layer select
       this.addAllIntoSelection()
@@ -445,7 +445,7 @@
 
       // initialize slider min,max and values -- multiple layers
       initializeSlider (attribute) {
-        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)  // && l.original_time_attribute === attribute
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)  //&& l.original_time_attribute === attribute
         this.setDateMask(visibleLayers)
         this.maskIncludeDate(this.outputDateMask)
         this.hasTime = this.outputDateMask.includes('HH:mm')
@@ -454,6 +454,7 @@
         this.sliderMax = minmax[1]
         this.unix1 = minmax[0]
         this.unix2 = minmax[0]
+        this.doubleSlider.value = {min: 0, max: this.step, range: this.sliderMax - this.sliderMin}
         this.doubleSlider.value = {min: 0, max: this.step, range: this.sliderMax - this.sliderMin}
         this.openInfo = true
       },
