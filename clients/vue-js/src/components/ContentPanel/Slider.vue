@@ -16,12 +16,14 @@
       :items="attributesSelection"
       v-model="attribute"
     />
+    <!--double range slider-->
+    <div id="double-slider"></div>
     <div v-if="openInfo">
       <!--<p v-if="!attribute">time-attribute: {{timeData.original_time_attribute}}</p>-->
       <!--<p v-if="attribute">time-attribute: {{attribute}}</p>-->
 
       <!--double range slider-->
-      <section class="range-slider">
+      <!--<section class="range-slider">
         <span class="rangeValues"></span>
         <input
           @click="getNewUrl()"
@@ -37,7 +39,7 @@
           :max="sliderMax"
           :step="step"
           type="range">
-      </section>
+      </section>-->
 
       <!--datepicker 1-->
       <v-menu
@@ -171,6 +173,7 @@
 
 <script>
   import moment from 'moment'
+  import DoubleSlider from 'double-slider'
   import ImageLayer from 'ol/layer/image'
   import { WebgisImageWMS, layersList } from '../../map-builder'
 
@@ -185,6 +188,7 @@
         timeData: null,
         attribute: null,
         openInfo: false,
+        sliderCreated: false,
 
         // selects lists
         layersSelection: [],
@@ -240,6 +244,9 @@
     watch: {
       // triggers after layer is selected
       timeData (value) {
+        if (!this.sliderCreated) {
+          this.createSlider()
+        }
         this.attributesSelection = []
         this.attribute = null
 
@@ -257,9 +264,13 @@
           this.outputDateMask = value.output_datetime_mask
           this.maskIncludeDate(this.outputDateMask)
           this.hasTime = this.outputDateMask.includes('HH:mm')
-          this.setSliderValue()
           this.sliderMin = this.timeData.time_values[0]
           this.sliderMax = this.timeData.time_values[1]
+          console.log('NEW slIDER')
+          this.unix1 = this.sliderMin
+          this.unix2 = this.unix1 + this.step
+          this.doubleSlider.value = {min: 0, range: this.timeData.time_values[1] - this.timeData.time_values[0]}
+          this.setSliderValue()
           this.openInfo = true
           this.getNewUrl()
         }
@@ -280,35 +291,39 @@
         this.userDate1 = moment(val * 1000).format(this.outputDateMask)
         this.pickerDate1 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime1 = moment(val * 1000).format('HH:mm')
-        if (val >= this.unix2 - this.step) {
-          this.unix2 = parseInt(val) + this.step
-        }
+//        if (val >= this.unix2 - this.step) {
+//          this.unix2 = parseInt(val) + this.step
+//        }
       },
       unix2 (val) {
         this.userDate2 = moment(val * 1000).format(this.outputDateMask)
         this.pickerDate2 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime2 = moment(val * 1000).format('HH:mm')
-        if (val <= this.unix1 + this.step) {
-          this.unix1 = parseInt(val) - this.step
-        }
+//        if (val <= this.unix1 + this.step) {
+//          this.unix1 = parseInt(val) - this.step
+//        }
       },
       // date picker
       pickerDate1 (val) {
         const dateAndTime = `${val}-${this.pickerTime1}`
         this.unix1 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
+        this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
       },
       pickerDate2 (val) {
         const dateAndTime = `${val}-${this.pickerTime2}`
         this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
+        this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
       },
       // time picker
       pickerTime1 (val) {
         const dateAndTime = `${this.pickerDate1}-${val}`
         this.unix1 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
+        this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
       },
       pickerTime2 (val) {
         const dateAndTime = `${this.pickerDate2}-${val}`
         this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
+        this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
       },
       animationSpeed (val) {
         console.log(val)
@@ -324,20 +339,22 @@
     },
 
     created () {
-//      console.log('MAP')
-//      console.log(this.$map)
-//      console.log(this.$map.getLayer('qgislayer').getSource())
-      // initialize sliders https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
-      let sliderSections = document.getElementsByClassName('range-slider')
-      for (let x = 0; x < sliderSections.length; x++) {
-        let sliders = sliderSections[x].getElementsByTagName('input')
-        for (let y = 0; y < sliders.length; y++) {
-          if (sliders[y].type === 'range') {
-            sliders[y].oninput = this.getSliderVals()
-            sliders[y].oninput()
-          }
-        }
-      }
+//
+////      console.log('MAP')
+////      console.log(this.$map)
+////      console.log(this.$map.getLayer('qgislayer').getSource())
+//
+//      // initialize sliders https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
+//      let sliderSections = document.getElementsByClassName('range-slider')
+//      for (let x = 0; x < sliderSections.length; x++) {
+//        let sliders = sliderSections[x].getElementsByTagName('input')
+//        for (let y = 0; y < sliders.length; y++) {
+//          if (sliders[y].type === 'range') {
+//            sliders[y].oninput = this.getSliderVals()
+//            sliders[y].oninput()
+//          }
+//        }
+//      }
 
       // add "select all layers" into layer select
       this.addAllIntoSelection()
@@ -391,6 +408,30 @@
     },
 
     methods: {
+      createSlider () {
+        this.doubleSlider = new DoubleSlider({
+          id: 'double-slider',
+          onEnd: value => {
+            this.getNewUrl()
+            console.log(value)
+          },
+          onMove: value => {
+            this.unix1 = value.min + this.sliderMin
+            this.unix2 = value.max + this.sliderMin
+            if (value.min >= value.max - this.step) {
+              this.unix2 = value.min + this.step + this.sliderMin
+              this.doubleSlider.value = {max: value.min + this.step}
+            }
+            if (value.max <= value.min + this.step) {
+              this.unix1 = value.max - this.step + this.sliderMin
+              this.doubleSlider.value = {min: value.max - this.step}
+            }
+          },
+          color: '#1976D2'
+        })
+        this.sliderCreated = true
+      },
+
       // set selected layer visible
       setModelVisibility (model, visible) {
         const visibleLayers = this.$overlays.list.filter(l => l.visible)
@@ -413,6 +454,7 @@
         this.sliderMax = minmax[1]
         this.unix1 = minmax[0]
         this.unix2 = minmax[0]
+        this.doubleSlider.value = {min: 0, max: this.step, range: this.sliderMax - this.sliderMin}
         this.openInfo = true
       },
 
@@ -420,13 +462,17 @@
       setSliderValue () {
         if (this.layerModel.unix1) {
           this.unix1 = this.layerModel.unix1
+          this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
         } else {
           this.unix1 = this.timeData.time_values[0]
+          this.doubleSlider.value = {min: 0}
         }
         if (this.layerModel.unix2) {
           this.unix2 = this.layerModel.unix2
+          this.doubleSlider.value = {max: this.unix2}
         } else {
           this.unix2 = this.timeData.time_values[0]
+          this.doubleSlider.value = {max: this.step}
         }
       },
 
