@@ -2,7 +2,6 @@
   <div class="pa-2">
 
     <!--layers drop box-->
-    <!--used @change in case of selecting same option twice-->
     <v-select
       label="Select Time Layer"
       :items="layersSelection"
@@ -10,20 +9,22 @@
       item-text="name"
       @change="resetAttribute()"
     />
-    <v-select
+   <v-select
       v-if="attributesSelection.length > 1 && !attribute"
       label="Select Attribute"
       :items="attributesSelection"
       v-model="attribute"
     />
-    <!--double range slider-->
-    <div id="double-slider"></div>
-    <div v-if="openInfo">
-      <!--<p v-if="!attribute">time-attribute: {{timeData.original_time_attribute}}</p>-->
-      <!--<p v-if="attribute">time-attribute: {{attribute}}</p>-->
+<!--
+    <span v-if="openInfo">
+      <p v-if="!attribute">time-attribute: {{timeData.original_time_attribute}}</p>
+      <p v-if="attribute">time-attribute: {{attribute}}</p>
+    </span>
+-->
 
+    <div v-if="openInfo">
       <!--double range slider-->
-      <section class="range-slider">
+     <!-- <section class="range-slider">
         <span class="rangeValues"></span>
         <input
           @click="getNewUrl()"
@@ -39,7 +40,7 @@
           :max="sliderMax"
           :step="step"
           type="range">
-      </section>
+      </section>-->
 
       <!--datepicker 1-->
       <v-menu
@@ -79,8 +80,8 @@
             OK
           </v-btn>
         </v-date-picker>
-        <div>
-        </div>
+        <!--<div>-->
+        <!--</div>-->
       </v-menu>
 
       <!--datepicker 2-->
@@ -95,6 +96,7 @@
         :nudge-right="40"
         :return-value.sync="pickerDate2">
         <v-text-field
+          class="no-padding"
           slot="activator"
           v-model="userDate2"
           prepend-icon="event"
@@ -119,7 +121,8 @@
       </v-menu>
 
       <!--animation-->
-      <v-flex xs12>
+      <!--OLD-->
+      <!--<v-flex xs12>
         <v-layout row wrap>
           <v-flex xs6>
             <v-btn
@@ -132,6 +135,36 @@
               @click="animate(animateStop)">
               stop
             </v-btn>
+          </v-flex>
+          <v-flex xs6>
+            <v-switch
+              class="cumulatively"
+              :label="`cumulative`"
+              v-model="cumulatively"
+            ></v-switch>
+          </v-flex>
+        </v-layout>
+      </v-flex>-->
+
+      <!--NEW-->
+
+      <!--<v-flex xs12>
+        <v-layout row wrap>
+          <v-flex xs6>
+
+
+&lt;!&ndash;
+            <v-btn
+              v-if="animateStop"
+              @click="animate(animateStop)">
+              play
+            </v-btn>
+            <v-btn
+              v-if="!animateStop"
+              @click="animate(animateStop)">
+              stop
+            </v-btn>
+&ndash;&gt;
           </v-flex>
           <v-flex xs6>
             <v-icon class="animate-icon" @click="animationSettings = !animationSettings">settings</v-icon>
@@ -148,7 +181,7 @@
           </div>
         </scroll-area>
 
-       <!-- <v-layout row wrap v-if="animationSettings">
+       &lt;!&ndash; <v-layout row wrap v-if="animationSettings">
           <v-flex xs6>
             <p>cumulative</p>
           </v-flex>
@@ -164,10 +197,20 @@
             <v-slider  step="1" min="0" max="4"></v-slider>
           </v-flex>
 
-        </v-layout>-->
-      </v-flex>
+        </v-layout>
+        &ndash;&gt;
+      </v-flex>-->
 
     </div>
+
+    <!--double range slider-->
+    <div class="range-container" v-show="openInfo">
+      <v-icon class="animate-icon" v-if="animateStop" @click="animate(animateStop)">play_circle_outline</v-icon>
+      <v-icon class="animate-icon" v-if="!animateStop" @click="animate(animateStop)">pause_circle_outline</v-icon>
+      <div class="slider" id="double-slider"></div>
+      <v-icon class="animate-icon" @click="animationSettings = !animationSettings">settings</v-icon>
+    </div>
+
   </div>
 </template>
 
@@ -247,6 +290,9 @@
         if (!this.sliderCreated) {
           this.createSlider()
         }
+
+        this.cumulatively = false
+        this.animateStop = true
         this.attributesSelection = []
         this.attribute = null
 
@@ -266,10 +312,10 @@
           this.hasTime = this.outputDateMask.includes('HH:mm')
           this.sliderMin = this.timeData.time_values[0]
           this.sliderMax = this.timeData.time_values[1]
-          console.log('NEW slIDER')
+//          console.log('NEW slIDER')
           this.unix1 = this.sliderMin
           this.unix2 = this.unix1 + this.step
-          this.doubleSlider.value = {min: 0, range: this.timeData.time_values[1] - this.timeData.time_values[0]}
+          this.doubleSlider.value = {range: this.timeData.time_values[1] - this.timeData.time_values[0]}
           this.setSliderValue()
           this.openInfo = true
           this.getNewUrl()
@@ -326,13 +372,13 @@
         this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
       },
       animationSpeed (val) {
-        console.log(val)
+//        console.log(val)
         let speed = 0.2813 * val * val - 0.1875 * val + 0.25
         if (val > 1) {
-          console.log(Math.floor(speed))
+//          console.log(Math.floor(speed))
           this.frameRate = Math.floor(speed)
         } else {
-          console.log(speed)
+//          console.log(speed)
           this.frameRate = speed
         }
       }
@@ -345,7 +391,8 @@
 //      console.log(this.$map.getLayer('qgislayer').getSource())
 //
       // initialize sliders https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
-      let sliderSections = document.getElementsByClassName('range-slider')
+     /*
+     let sliderSections = document.getElementsByClassName('range-slider')
       for (let x = 0; x < sliderSections.length; x++) {
         let sliders = sliderSections[x].getElementsByTagName('input')
         for (let y = 0; y < sliders.length; y++) {
@@ -355,6 +402,7 @@
           }
         }
       }
+      */
 
       // add "select all layers" into layer select
       this.addAllIntoSelection()
@@ -413,7 +461,7 @@
           id: 'double-slider',
           onEnd: value => {
             this.getNewUrl()
-            console.log(value)
+//            console.log(value)
           },
           onMove: value => {
             this.unix1 = value.min + this.sliderMin
@@ -445,7 +493,8 @@
 
       // initialize slider min,max and values -- multiple layers
       initializeSlider (attribute) {
-        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)  //&& l.original_time_attribute === attribute
+//        console.log('SLIDER INIT')
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)  // && l.original_time_attribute === attribute
         this.setDateMask(visibleLayers)
         this.maskIncludeDate(this.outputDateMask)
         this.hasTime = this.outputDateMask.includes('HH:mm')
@@ -470,7 +519,7 @@
         }
         if (this.layerModel.unix2) {
           this.unix2 = this.layerModel.unix2
-          this.doubleSlider.value = {max: this.unix2}
+          this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
         } else {
           this.unix2 = this.timeData.time_values[0]
           this.doubleSlider.value = {max: this.step}
@@ -550,9 +599,10 @@
 
       // in case that one layer is selected twice
       resetAttribute () {
-        this.cumulatively = false
-        this.animateStop = true
+//        console.log(timeData)
+//        console.log(this.timeData)
         if (this.timeData && this.timeData.selectAllLayers) {
+          console.log('RESET ATR')
           this.attribute = null
           this.openInfo = false
           this.attributesSelection = []
@@ -578,8 +628,8 @@
       // find unique attributes
       checkMultipleAttributes () {
         this.openInfo = false
-//        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
-//        this.attributesSelection = [...new Set(visibleLayers.map(l => l.original_time_attribute))]
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
+        this.attributesSelection = [...new Set(visibleLayers.map(l => l.original_time_attribute))]
         this.attributesSelection.unshift('All attributes')
       },
 
@@ -619,6 +669,7 @@
       },
 
       // double slider range functionality https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
+      /*
       getSliderVals () {
         // get slider values
         let parent = this.parentNode
@@ -628,6 +679,7 @@
         let displayElement = parent.getElementsByClassName('rangeValues')[0]
         displayElement.innerHTML = `$ ${slide1}k - $${slide2}k`
       },
+      */
 
       // set old time from date picker in case of "cancel" button pressed
       resetTime (num) {
@@ -692,17 +744,34 @@
 
 <style lang="scss">
 
+  .no-padding {
+    padding: 0;
+  }
+
   /*cumulate switch*/
   .cumulatively {
     margin: 10px 0 -10px;
   }
 
-  /*animate icon*/
+  /*animate*/
   .animate-icon {
     margin-top: 13px;
     cursor: pointer;
     color: gray !important;
   }
+
+  .range-container {
+    display: flex;
+    padding-top: 10px;
+    margin-bottom: 20px;
+  }
+
+  .slider {
+    margin: 0 20px;
+    width: 100%;
+    padding-top: 19px;
+  }
+
   /*time picker*/
 
   .hide-child > :first-child{
@@ -730,7 +799,8 @@
     float: right;
   }
 
-  /*slider*/
+
+ /* !*slider*!
 
   @mixin range-slider($width, $height, $input-top, $input-bg-color, $input-thumb-color, $float:none, $input-height:20px, $input-border-radius:14px) {
     position: relative;
@@ -769,9 +839,9 @@
       height: $input-height;
       border: none;
       border-radius: $input-border-radius;
-      background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, lighten($input-thumb-color,60%)), color-stop(100%, $input-thumb-color)); /* android <= 2.2 */
-      background-image: -webkit-linear-gradient(top , lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); /* older mobile safari and android > 2.2 */;
-      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); /* W3C */
+      background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, lighten($input-thumb-color,60%)), color-stop(100%, $input-thumb-color)); !* android <= 2.2 *!
+      background-image: -webkit-linear-gradient(top , lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); !* older mobile safari and android > 2.2 *!;
+      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); !* W3C *!
     }
 
     input[type="range"]::-moz-range-thumb {
@@ -783,7 +853,7 @@
       height: $input-height;
       border: none;
       border-radius: $input-border-radius;
-      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); /* W3C */
+      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); !* W3C *!
     }
 
     input[type="range"]::-ms-thumb {
@@ -795,7 +865,7 @@
       height: $input-height;
       border-radius: $input-border-radius;
       border: 0;
-      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); /* W3C */
+      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); !* W3C *!
     }
 
     input[type=range]::-moz-range-track {
@@ -818,6 +888,6 @@
 
   section.range-slider {
     @include range-slider(100%, 50px, 5px, #F1EFEF, #413F41, left);
-  }
+  }*/
 
 </style>

@@ -11,6 +11,7 @@ services:
   django:
     restart: always
     image: docker.io/davidtethal/gisquick-vue
+#    image: gisquick/django
     links:
       - qgisserver
     volumes:
