@@ -15,33 +15,8 @@
       :items="attributesSelection"
       v-model="attribute"
     />
-<!--
-    <span v-if="openInfo">
-      <p v-if="!attribute">time-attribute: {{timeData.original_time_attribute}}</p>
-      <p v-if="attribute">time-attribute: {{attribute}}</p>
-    </span>
--->
 
     <div v-if="openInfo">
-      <!--double range slider-->
-     <!-- <section class="range-slider">
-        <span class="rangeValues"></span>
-        <input
-          @click="getNewUrl()"
-          v-model="unix1"
-          :min="sliderMin"
-          :max="sliderMax"
-          :step="step"
-          type="range">
-        <input
-          @click="getNewUrl()"
-          v-model="unix2"
-          :min="sliderMin"
-          :max="sliderMax"
-          :step="step"
-          type="range">
-      </section>-->
-
       <!--datepicker 1-->
       <v-menu
         ref="menu1"
@@ -80,8 +55,6 @@
             OK
           </v-btn>
         </v-date-picker>
-        <!--<div>-->
-        <!--</div>-->
       </v-menu>
 
       <!--datepicker 2-->
@@ -119,97 +92,38 @@
           </v-btn>
         </v-date-picker>
       </v-menu>
-
-      <!--animation-->
-      <!--OLD-->
-      <!--<v-flex xs12>
-        <v-layout row wrap>
-          <v-flex xs6>
-            <v-btn
-              v-if="animateStop"
-              @click="animate(animateStop)">
-              play
-            </v-btn>
-            <v-btn
-              v-if="!animateStop"
-              @click="animate(animateStop)">
-              stop
-            </v-btn>
-          </v-flex>
-          <v-flex xs6>
-            <v-switch
-              class="cumulatively"
-              :label="`cumulative`"
-              v-model="cumulatively"
-            ></v-switch>
-          </v-flex>
-        </v-layout>
-      </v-flex>-->
-
-      <!--NEW-->
-
-      <!--<v-flex xs12>
-        <v-layout row wrap>
-          <v-flex xs6>
-
-
-&lt;!&ndash;
-            <v-btn
-              v-if="animateStop"
-              @click="animate(animateStop)">
-              play
-            </v-btn>
-            <v-btn
-              v-if="!animateStop"
-              @click="animate(animateStop)">
-              stop
-            </v-btn>
-&ndash;&gt;
-          </v-flex>
-          <v-flex xs6>
-            <v-icon class="animate-icon" @click="animationSettings = !animationSettings">settings</v-icon>
-          </v-flex>
-        </v-layout>
-
-        <scroll-area v-if="animationSettings">
-          <div class="item-container">
-            <p>cumulative</p>
-          </div>
-          <div class="item-container">
-            <p>cumulative</p>
-            <v-slider v-model="animationSpeed" step="1" min="0" max="4"></v-slider>
-          </div>
-        </scroll-area>
-
-       &lt;!&ndash; <v-layout row wrap v-if="animationSettings">
-          <v-flex xs6>
-            <p>cumulative</p>
-          </v-flex>
-          <v-flex xs6>
-            <v-switch
-              v-model="cumulatively"
-            ></v-switch>
-          </v-flex>
-          <v-flex xs6>
-            <p>speed</p>
-          </v-flex>
-          <v-flex xs6>
-            <v-slider  step="1" min="0" max="4"></v-slider>
-          </v-flex>
-
-        </v-layout>
-        &ndash;&gt;
-      </v-flex>-->
-
     </div>
 
     <!--double range slider-->
     <div class="range-container" v-show="openInfo">
       <v-icon class="animate-icon" v-if="animateStop" @click="animate(animateStop)">play_circle_outline</v-icon>
       <v-icon class="animate-icon" v-if="!animateStop" @click="animate(animateStop)">pause_circle_outline</v-icon>
-      <div class="slider" id="double-slider"></div>
+      <div class="double-range" id="double-slider"></div>
       <v-icon class="animate-icon" @click="animationSettings = !animationSettings">settings</v-icon>
     </div>
+    <div v-bind:class="{ 'settings-container': animationSettings }"  v-if="animationSettings">
+      <div class="animate-row">
+        <p>cumulative</p>
+        <v-switch
+          class="cumulatively"
+          v-model="cumulatively"
+        ></v-switch>
+      </div>
+      <div class="animate-row">
+        <p>speed</p>
+        <v-slider class="speed-slider" v-model="animationSpeed" step="1" min="0" max="4"></v-slider>
+      </div>
+    </div>
+    <!--<v-flex xs12>
+      <scroll-area >
+        <div class="item-container">
+          <p>cumulative</p>
+        </div>
+        <div class="item-container">
+          <p>cumulative</p>
+        </div>
+      </scroll-area>
+    </v-flex>-->
 
   </div>
 </template>
@@ -337,17 +251,13 @@
         this.userDate1 = moment(val * 1000).format(this.outputDateMask)
         this.pickerDate1 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime1 = moment(val * 1000).format('HH:mm')
-//        if (val >= this.unix2 - this.step) {
-//          this.unix2 = parseInt(val) + this.step
-//        }
+        this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
       },
       unix2 (val) {
         this.userDate2 = moment(val * 1000).format(this.outputDateMask)
         this.pickerDate2 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime2 = moment(val * 1000).format('HH:mm')
-//        if (val <= this.unix1 + this.step) {
-//          this.unix1 = parseInt(val) - this.step
-//        }
+        this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
       },
       // date picker
       pickerDate1 (val) {
@@ -372,38 +282,19 @@
         this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
       },
       animationSpeed (val) {
-//        console.log(val)
-        let speed = 0.2813 * val * val - 0.1875 * val + 0.25
-        if (val > 1) {
-//          console.log(Math.floor(speed))
+        let speed = 0.2813 * val * val - 2.063 * val + 4
+        console.log(val)
+        if (val < 2) {
+          console.log(Math.floor(speed))
           this.frameRate = Math.floor(speed)
         } else {
-//          console.log(speed)
+          console.log(speed)
           this.frameRate = speed
         }
       }
     },
 
     created () {
-//
-//      console.log('MAP')
-//      console.log(this.$map)
-//      console.log(this.$map.getLayer('qgislayer').getSource())
-//
-      // initialize sliders https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
-     /*
-     let sliderSections = document.getElementsByClassName('range-slider')
-      for (let x = 0; x < sliderSections.length; x++) {
-        let sliders = sliderSections[x].getElementsByTagName('input')
-        for (let y = 0; y < sliders.length; y++) {
-          if (sliders[y].type === 'range') {
-            sliders[y].oninput = this.getSliderVals()
-            sliders[y].oninput()
-          }
-        }
-      }
-      */
-
       // add "select all layers" into layer select
       this.addAllIntoSelection()
 
@@ -480,6 +371,16 @@
         this.sliderCreated = true
       },
 
+      eventFire (el, etype) {
+        if (el.fireEvent) {
+          el.fireEvent('on' + etype)
+        } else {
+          var evObj = document.createEvent('Events')
+          evObj.initEvent(etype, true, false)
+          el.dispatchEvent(evObj)
+        }
+      },
+
       // set selected layer visible
       setModelVisibility (model, visible) {
         const visibleLayers = this.$overlays.list.filter(l => l.visible)
@@ -502,9 +403,9 @@
         this.sliderMin = minmax[0]
         this.sliderMax = minmax[1]
         this.unix1 = minmax[0]
-        this.unix2 = minmax[0]
-        this.doubleSlider.value = {min: 0, max: this.step, range: this.sliderMax - this.sliderMin}
-        this.doubleSlider.value = {min: 0, max: this.step, range: this.sliderMax - this.sliderMin}
+        this.unix2 = minmax[0] + this.step
+        this.doubleSlider.value = {min: 0, max: this.unix2 - this.sliderMin, range: this.sliderMax - this.sliderMin}
+        this.doubleSlider.value = {min: 0, max: this.unix2 - this.sliderMin, range: this.sliderMax - this.sliderMin}
         this.openInfo = true
       },
 
@@ -521,8 +422,8 @@
           this.unix2 = this.layerModel.unix2
           this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
         } else {
-          this.unix2 = this.timeData.time_values[0]
-          this.doubleSlider.value = {max: this.step}
+          this.unix2 = this.step + this.sliderMin
+          this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
         }
       },
 
@@ -668,19 +569,6 @@
         this.hasTime = false
       },
 
-      // double slider range functionality https://codepen.io/ChrisSargent/pen/meMMye?editors=1010
-      /*
-      getSliderVals () {
-        // get slider values
-        let parent = this.parentNode
-        let slides = parent.getElementsByTagName('input')
-        let slide1 = parseFloat(slides[0].value)
-        let slide2 = parseFloat(slides[1].value)
-        let displayElement = parent.getElementsByClassName('rangeValues')[0]
-        displayElement.innerHTML = `$ ${slide1}k - $${slide2}k`
-      },
-      */
-
       // set old time from date picker in case of "cancel" button pressed
       resetTime (num) {
         if (num === 1) {
@@ -695,6 +583,7 @@
       // simple animation
       animate (play) {
         if (play) {
+          this.eventFire(document.getElementsByClassName('range__control')[0], 'click')
           this.animateStop = false
           this.newFrame()
         } else {
@@ -748,28 +637,57 @@
     padding: 0;
   }
 
-  /*cumulate switch*/
-  .cumulatively {
-    margin: 10px 0 -10px;
+  /*animate*/
+
+  .settings-container {
+    opacity: 0;
+    animation: fadeIn 0.3s ease-in both;
   }
 
-  /*animate*/
   .animate-icon {
     margin-top: 13px;
     cursor: pointer;
     color: gray !important;
   }
 
+  .animate-row {
+    margin-bottom: -20px;
+    display: flex;
+  }
+
+  .cumulatively > div > div {
+    margin: auto;
+  }
+
+  .speed-slider {
+    padding: 0 !important;
+    width: 100%;
+    margin-left: 20px;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translate3d(0, -20%, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  /*double range slider*/
+
   .range-container {
     display: flex;
     padding-top: 10px;
-    margin-bottom: 20px;
+    /*margin-bottom: 20px;*/
   }
 
-  .slider {
+  .double-range {
     margin: 0 20px;
     width: 100%;
-    padding-top: 19px;
+    padding-top: 13px;
   }
 
   /*time picker*/
@@ -798,96 +716,5 @@
   .right {
     float: right;
   }
-
-
- /* !*slider*!
-
-  @mixin range-slider($width, $height, $input-top, $input-bg-color, $input-thumb-color, $float:none, $input-height:20px, $input-border-radius:14px) {
-    position: relative;
-    width: $width;
-    height: $height;
-    float: $float;
-    text-align: center;
-
-    input[type="range"] {
-      pointer-events: none;
-      position: absolute;
-      -webkit-appearance: none;
-      -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
-      border: none;
-      border-radius: $input-border-radius;
-      background: $input-bg-color;
-      box-shadow: inset 0 1px 0 0 darken($input-bg-color,15%), inset 0 -1px 0 0 darken($input-bg-color,10%);
-      -webkit-box-shadow: inset 0 1px 0 0 darken($input-bg-color,15%), inset 0 -1px 0 0 darken($input-bg-color,10%);
-      overflow: hidden;
-      left: 0;
-      top: $input-top;
-      width: $width;
-      outline: none;
-      height: $input-height;
-      margin: 0;
-      padding: 0;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-      pointer-events: all;
-      position: relative;
-      z-index: 1;
-      outline: 0;
-      -webkit-appearance: none;
-      width: $input-height;
-      height: $input-height;
-      border: none;
-      border-radius: $input-border-radius;
-      background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, lighten($input-thumb-color,60%)), color-stop(100%, $input-thumb-color)); !* android <= 2.2 *!
-      background-image: -webkit-linear-gradient(top , lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); !* older mobile safari and android > 2.2 *!;
-      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); !* W3C *!
-    }
-
-    input[type="range"]::-moz-range-thumb {
-      pointer-events: all;
-      position: relative;
-      z-index: 10;
-      -moz-appearance: none;
-      width: $input-height;
-      height: $input-height;
-      border: none;
-      border-radius: $input-border-radius;
-      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); !* W3C *!
-    }
-
-    input[type="range"]::-ms-thumb {
-      pointer-events: all;
-      position: relative;
-      z-index: 10;
-      -ms-appearance: none;
-      width: $input-height;
-      height: $input-height;
-      border-radius: $input-border-radius;
-      border: 0;
-      background-image: linear-gradient(to bottom, lighten($input-thumb-color,60%) 0, $input-thumb-color 100%); !* W3C *!
-    }
-
-    input[type=range]::-moz-range-track {
-      position: relative;
-      z-index: -1;
-      background-color: rgba(0, 0, 0, 1);
-      border: 0;
-    }
-
-    input[type=range]:last-of-type::-moz-range-track {
-      -moz-appearance: none;
-      background: none transparent;
-      border: 0;
-    }
-
-    input[type=range]::-moz-focus-outer {
-      border: 0;
-    }
-  }
-
-  section.range-slider {
-    @include range-slider(100%, 50px, 5px, #F1EFEF, #413F41, left);
-  }*/
 
 </style>
