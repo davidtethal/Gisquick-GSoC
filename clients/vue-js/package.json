@@ -21,6 +21,7 @@
     "simplebar": "^2.5.1",
     "url-polyfill": "^1.0.10",
     "vue": "^2.5.2",
+    "vue-slider-component": "^2.7.1",
     "vuetify": "^1.0.0"
   },
   "devDependencies": {

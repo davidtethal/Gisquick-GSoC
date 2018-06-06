@@ -95,10 +95,12 @@
     </div>
 
     <!--double range slider-->
+
+    <vue-slider class="double-range" ref="slider" v-model="sliderValue" v-bind="sliderOptions" @drag-end="getNewUrl()"></vue-slider>
     <div class="range-container" v-show="openInfo">
       <v-icon class="animate-icon" v-if="animateStop" @click="animate(animateStop)">play_circle_outline</v-icon>
       <v-icon class="animate-icon" v-if="!animateStop" @click="animate(animateStop)">pause_circle_outline</v-icon>
-      <div class="double-range" id="double-slider"></div>
+      <!--<div class="double-range" id="double-slider"></div>-->
       <v-icon class="animate-icon" @click="animationSettings = !animationSettings">settings</v-icon>
     </div>
     <div v-bind:class="{ 'settings-container': animationSettings }"  v-if="animationSettings">
@@ -133,11 +135,13 @@
   import DoubleSlider from 'double-slider'
   import ImageLayer from 'ol/layer/image'
   import { WebgisImageWMS, layersList } from '../../map-builder'
+  import vueSlider from 'vue-slider-component'
 
   export default {
     inject: ['$map', '$project', '$overlays'],
     name: 'timeslide',
     icon: 'tracking',
+    components: { vueSlider },
 
     data () {
       return {
@@ -176,7 +180,36 @@
         animationSettings: false,
         animateStop: true,
         frameRate: 1, // sec
-        cumulatively: false
+        cumulatively: false,
+
+        sliderValue: [0, 0],
+        sliderOptions: {
+          height: 2,
+          dotSize: 12,
+          min: 0,
+          max: 1E+20,
+          disabled: false,
+          show: true,
+          useKeyboard: true,
+          tooltip: false,
+//          formatter: "¥{value}",
+//          overlapFormatter: "¥{value1} ~ ¥{value2}",
+          sliderStyle: [
+            {
+              'backgroundColor': '#1976D2'
+            },
+            {
+              'backgroundColor': '#1976D2'
+            }
+          ],
+          bgStyle: {
+            'backgroundColor': '#fff',
+            'boxShadow': 'inset 0.5px 0.5px 3px 1px rgba(0,0,0,.25)'
+          },
+          processStyle: {
+            'backgroundColor': '#1976D2'
+          }
+        }
       }
     },
 
@@ -201,9 +234,9 @@
     watch: {
       // triggers after layer is selected
       timeData (value) {
-        if (!this.sliderCreated) {
-          this.createSlider()
-        }
+//        if (!this.sliderCreated) {
+//          this.createSlider()
+//        }
 
         this.cumulatively = false
         this.animateStop = true
@@ -229,8 +262,13 @@
 //          console.log('NEW slIDER')
           this.unix1 = this.sliderMin
           this.unix2 = this.unix1 + this.step
-          this.doubleSlider.value = {range: this.timeData.time_values[1] - this.timeData.time_values[0]}
+//          this.doubleSlider.value = {range: this.timeData.time_values[1] - this.timeData.time_values[0]}
+          this.sliderOptions.min = this.sliderMin
+          this.sliderOptions.max = this.sliderMax
+          console.log(this.sliderOptions)
           this.setSliderValue()
+//          this.$refs.slider.setValue([this.unix1, this.unix2])
+//          this.sliderValue = [this.unix1, this.unix2]
           this.openInfo = true
           this.getNewUrl()
         }
@@ -246,40 +284,61 @@
           this.initializeSlider(value)
         }
       },
+      sliderValue (val) {
+        console.log(val)
+        console.log(this.sliderOptions.min)
+        if (this.sliderOptions.min !== 0) {
+          this.unix1 = val[0]
+          this.unix2 = val[1]
+        }
+//        if (val[0] >= val[1] - this.step) {
+//          this.unix2 = val[0] + this.step
+//          this.sliderValue[0] = this.unix2
+//        }
+//        if (val[1] <= val[0] + this.step) {
+//          this.unix1 = val[1] - this.step
+//          this.sliderValue[1] = this.unix1
+//        }
+      },
       // slider values
       unix1 (val) {
         this.userDate1 = moment(val * 1000).format(this.outputDateMask)
         this.pickerDate1 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime1 = moment(val * 1000).format('HH:mm')
-        this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
+        console.log(val)
+        this.$refs.slider.setValue([val, this.unix2])
       },
       unix2 (val) {
         this.userDate2 = moment(val * 1000).format(this.outputDateMask)
         this.pickerDate2 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime2 = moment(val * 1000).format('HH:mm')
-        this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
+        console.log(val)
+        this.$refs.slider.setValue([this.unix1, val])
       },
       // date picker
       pickerDate1 (val) {
         const dateAndTime = `${val}-${this.pickerTime1}`
         this.unix1 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
-        this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
+//        this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
       },
       pickerDate2 (val) {
         const dateAndTime = `${val}-${this.pickerTime2}`
         this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
-        this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
+        this.sliderValue[1] = this.unix2
+//        this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
       },
       // time picker
       pickerTime1 (val) {
         const dateAndTime = `${this.pickerDate1}-${val}`
         this.unix1 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
-        this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
+        this.sliderValue[0] = this.unix1
+//        this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
       },
       pickerTime2 (val) {
         const dateAndTime = `${this.pickerDate2}-${val}`
         this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
-        this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
+        this.sliderValue[1] = this.unix2
+//        this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
       },
       animationSpeed (val) {
         let speed = 0.2813 * val * val - 2.063 * val + 4
@@ -347,39 +406,50 @@
     },
 
     methods: {
-      createSlider () {
-        this.doubleSlider = new DoubleSlider({
-          id: 'double-slider',
-          onEnd: value => {
-            this.getNewUrl()
-//            console.log(value)
-          },
-          onMove: value => {
-            this.unix1 = value.min + this.sliderMin
-            this.unix2 = value.max + this.sliderMin
-            if (value.min >= value.max - this.step) {
-              this.unix2 = value.min + this.step + this.sliderMin
-              this.doubleSlider.value = {max: value.min + this.step}
-            }
-            if (value.max <= value.min + this.step) {
-              this.unix1 = value.max - this.step + this.sliderMin
-              this.doubleSlider.value = {min: value.max - this.step}
-            }
-          },
-          color: '#1976D2'
-        })
-        this.sliderCreated = true
-      },
+//      createSlider () {
+//        new Vue({
+//          el: '#app',
+//          components: {
+//            vueSlider
+//          },
+//          data: {
+//
+//          }
+//        });
 
-      eventFire (el, etype) {
-        if (el.fireEvent) {
-          el.fireEvent('on' + etype)
-        } else {
-          var evObj = document.createEvent('Events')
-          evObj.initEvent(etype, true, false)
-          el.dispatchEvent(evObj)
-        }
-      },
+
+//        this.doubleSlider = new DoubleSlider({
+//          id: 'double-slider',
+//          onEnd: value => {
+//            this.getNewUrl()
+////            console.log(value)
+//          },
+//          onMove: value => {
+//            this.unix1 = value.min + this.sliderMin
+//            this.unix2 = value.max + this.sliderMin
+//            if (value.min >= value.max - this.step) {
+//              this.unix2 = value.min + this.step + this.sliderMin
+//              this.doubleSlider.value = {max: value.min + this.step}
+//            }
+//            if (value.max <= value.min + this.step) {
+//              this.unix1 = value.max - this.step + this.sliderMin
+//              this.doubleSlider.value = {min: value.max - this.step}
+//            }
+//          },
+//          color: '#1976D2'
+//        })
+//        this.sliderCreated = true
+//      },
+
+//      eventFire (el, etype) {
+//        if (el.fireEvent) {
+//          el.fireEvent('on' + etype)
+//        } else {
+//          var evObj = document.createEvent('Events')
+//          evObj.initEvent(etype, true, false)
+//          el.dispatchEvent(evObj)
+//        }
+//      },
 
       // set selected layer visible
       setModelVisibility (model, visible) {
@@ -404,8 +474,14 @@
         this.sliderMax = minmax[1]
         this.unix1 = minmax[0]
         this.unix2 = minmax[0] + this.step
-        this.doubleSlider.value = {min: 0, max: this.unix2 - this.sliderMin, range: this.sliderMax - this.sliderMin}
-        this.doubleSlider.value = {min: 0, max: this.unix2 - this.sliderMin, range: this.sliderMax - this.sliderMin}
+        this.sliderOptions.min = this.sliderMin
+        this.sliderOptions.max = this.sliderMax
+//        this.$refs.slider.setValue([this.unix1, this.unix2])
+//        this.doubleSlider.value = {min: 0, max: this.unix2 - this.sliderMin, range: this.sliderMax - this.sliderMin}
+//        this.doubleSlider.value = {min: 0, max: this.unix2 - this.sliderMin, range: this.sliderMax - this.sliderMin}
+//        this.sliderOptions.min = this.sliderMin
+//        this.sliderOptions.max = this.sliderMax
+//        this.sliderValue = [this.sliderMin, this.sliderMin + this.step * 10]
         this.openInfo = true
       },
 
@@ -413,17 +489,17 @@
       setSliderValue () {
         if (this.layerModel.unix1) {
           this.unix1 = this.layerModel.unix1
-          this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
+//          this.doubleSlider.value = {min: this.unix1 - this.sliderMin}
         } else {
           this.unix1 = this.timeData.time_values[0]
-          this.doubleSlider.value = {min: 0}
+//          this.doubleSlider.value = {min: 0}
         }
         if (this.layerModel.unix2) {
           this.unix2 = this.layerModel.unix2
-          this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
+//          this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
         } else {
-          this.unix2 = this.step + this.sliderMin
-          this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
+          this.unix2 = this.timeData.time_values[0] + this.step
+//          this.doubleSlider.value = {max: this.unix2 - this.sliderMin}
         }
       },
 
@@ -441,6 +517,7 @@
 
       // update WMS url
       getNewUrl () {
+        console.log('NEW URL')
         if (this.layerModel.selectAllLayers) {
           this.updateMultipleLayers()
         } else {
@@ -583,7 +660,7 @@
       // simple animation
       animate (play) {
         if (play) {
-          this.eventFire(document.getElementsByClassName('range__control')[0], 'click')
+//          this.eventFire(document.getElementsByClassName('range__control')[0], 'click')
           this.animateStop = false
           this.newFrame()
         } else {
@@ -611,6 +688,15 @@
             return
           }
         }
+//        console.log(document.getElementById('double-slider'))
+//        console.log(document.getElementById('double-slider').children[0].children[1])
+//        this.eventFire(document.getElementById('double-slider').children[0], 'click')
+//        this.eventFire(document.getElementById('double-slider').children[0].children[2].children[0], 'click')
+//        document.getElementById('double-slider').children[0].children[1].children[0].click()
+//        document.getElementById('double-slider').children[0].children[2].children[0].click()
+//        document.getElementById('double-slider').children[0].children[1].click()
+//        document.getElementById('double-slider').children[0].children[1].click()
+//        console.log(this.doubleSlider.value)
         this.getNewUrl()
         if (!this.animateStop) {
           setTimeout(this.newFrame, this.frameRate * 1000)
@@ -638,7 +724,6 @@
   }
 
   /*animate*/
-
   .settings-container {
     opacity: 0;
     animation: fadeIn 0.3s ease-in both;
