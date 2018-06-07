@@ -95,13 +95,6 @@
     </div>
 
     <!--double range slider-->
-
-  <!--  <vue-slider
-      ref="testSlider"
-      v-model="testValue"
-      v-bind="testSliderOptions">
-    </vue-slider>-->
-
     <div class="range-container" v-if="openInfo">
       <v-icon
         class="animate-icon"
@@ -150,7 +143,7 @@
       <div class="animate-row">
         <p>step</p>
         <v-text-field
-          class="step-select ml-20"
+          class="step-text ml-20"
           v-model="setStepValue">
         </v-text-field>
         <v-select
@@ -258,39 +251,7 @@
             'backgroundColor': '#1976D2'
           }
         }
-/*
-        testValue: [
-          500,
-          600
-        ],
-        testSliderOptions: {
-          height: 2,
-          dotSize: 12,
-          min: 0,
-          max: 1000,
-          disabled: false,
-          show: true,
-          fixed: true,
-          processDragable: true,
-          useKeyboard: true,
-          tooltip: false,
-          sliderStyle: [
-            {
-              'backgroundColor': '#1976D2'
-            },
-            {
-              'backgroundColor': '#1976D2'
-            }
-          ],
-          bgStyle: {
-            'backgroundColor': '#fff',
-            'boxShadow': 'inset 0.5px 0.5px 3px 1px rgba(0,0,0,.25)'
-          },
-          processStyle: {
-            'backgroundColor': '#1976D2'
-          }
-        },*/
-        }
+      }
     },
 
     computed: {
@@ -409,22 +370,17 @@
       },
       animationSpeed (val) {
         let speed = 0.2813 * val * val - 2.063 * val + 4
-        console.log(val)
         if (val < 2) {
-          console.log(Math.floor(speed))
           this.frameRate = Math.floor(speed)
         } else {
-          console.log(speed)
           this.frameRate = speed
         }
       },
       setStepValue (val) {
-        console.log(val)
         this.changeTimeStep()
       },
       setTimeStep (val) {
         this.changeTimeStep()
-        console.log(val)
       },
       stickySlide (val) {
         this.sliderOptions.fixed = val
@@ -603,8 +559,8 @@
 
       // in case that one layer is selected twice
       resetAttribute () {
-//        console.log(timeData)
-//        console.log(this.timeData)
+        this.setStepValue = null
+        this.setTimeStep = null
         if (this.timeData && this.timeData.selectAllLayers) {
           console.log('RESET ATR')
           this.attribute = null
@@ -739,9 +695,7 @@
         if (this.setStepValue &&
             this.setTimeStep &&
             this.isNormalInteger(this.setStepValue)) {
-          console.log('BEFORE', this.step)
           this.step = this.setStepValue * this.setTimeStep
-          console.log('AFTER', this.step)
         }
       }
     }
@@ -756,6 +710,7 @@
 
   /*animate*/
   .settings-container {
+    margin-top: 25px;
     opacity: 0;
     animation: fadeIn 0.3s ease-in both;
   }
@@ -769,6 +724,11 @@
   .animate-row {
     margin-bottom: -20px;
     display: flex;
+  }
+
+  .animate-row > div {
+    max-width: 170px;
+    margin-left: auto;
   }
 
   .cumulatively > div > div {
@@ -813,16 +773,29 @@
     margin-left: 20px;
   }
 
+  .step-text {
+    padding: 0;
+    margin-top: -3px;
+    margin-left: auto !important;
+    max-width: 70px !important;
+  }
+
   .step-select {
     padding: 0;
     margin-top: -3px;
+    margin-left: 0 !important;
+    max-width: 100px !important;
+  }
+
+  .menu {
+    display: none !important;
   }
 
   .step-select > div > div {
     width: 80px;
   }
 
-  .step-select > div > input {
+  .step-text > div > input {
     text-align: center;
   }
 
