@@ -138,7 +138,7 @@
       </div>
       <div class="animate-row">
         <p>speed</p>
-        <v-slider class="speed-slider" v-model="animationSpeed" step="1" min="0" max="4"></v-slider>
+        <v-slider class="speed-slider" v-model="animationSpeed" step="0.1" min="0" max="4"></v-slider>
       </div>
       <div class="animate-row">
         <p>step</p>
@@ -147,7 +147,7 @@
           v-model="setStepValue">
         </v-text-field>
         <v-select
-          max-height="100"
+          max-height="150"
           class="step-select"
           :items="timeSteps"
           v-model="setTimeStep"
@@ -369,12 +369,13 @@
 //        this.sliderValue[1] = this.unix2
       },
       animationSpeed (val) {
-        let speed = 0.2813 * val * val - 2.063 * val + 4
-        if (val < 2) {
-          this.frameRate = Math.floor(speed)
-        } else {
-          this.frameRate = speed
-        }
+//        const speed =
+        this.frameRate = 0.2813 * val * val - 2.063 * val + 4
+//
+//        if (val < 2) {
+//          this.frameRate = Math.floor(speed)
+//        } else {
+//        }
       },
       setStepValue (val) {
         this.changeTimeStep()
@@ -710,9 +711,11 @@
 
   /*animate*/
   .settings-container {
-    margin-top: 25px;
+    margin-top: 10px;
+    padding-top: 15px;
     opacity: 0;
     animation: fadeIn 0.3s ease-in both;
+    background-color: aliceblue;
   }
 
   .animate-icon {
@@ -787,12 +790,8 @@
     max-width: 100px !important;
   }
 
-  .menu {
-    display: none !important;
-  }
-
   .step-select > div > div {
-    width: 80px;
+    overflow: inherit;
   }
 
   .step-text > div > input {
