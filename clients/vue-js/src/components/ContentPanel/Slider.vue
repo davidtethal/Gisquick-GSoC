@@ -391,6 +391,8 @@
       this.addAllIntoSelection()
 
       // disable map cashing
+      console.log('PROJECT', this.$project)
+      console.log('OWS', this.$project.ows_url)
       const map = this.$map
       if (!(map.overlay instanceof ImageLayer)) {
         // create and switch to WMS layer

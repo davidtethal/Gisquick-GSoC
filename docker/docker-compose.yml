@@ -3,6 +3,7 @@ services:
   qgisserver:
     restart: always
     image: gisquick/qgis-server
+#    image: kartoza/qgis-server:3.0
     volumes:
       - ./_data/publish:/publish/:ro
     ports:
@@ -22,6 +23,7 @@ services:
       - GUNICORN_WORKERS=2
       - GUNICORN_ERRORLOG=-
       - GUNICORN_ACCESSLOG=-
+      - DJANGO_GISQUICK_MAPSERVER_URL='http://192.168.0.16:90/cgi-bin/qgis_mapserv.fcgi'
     logging:
       driver: json-file
       options:
