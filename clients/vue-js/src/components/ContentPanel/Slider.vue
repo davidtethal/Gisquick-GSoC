@@ -312,7 +312,6 @@
         }
       },
       sliderValue (val) {
-        console.log('SLIDER VALUE', val[0])
         this.unix1 = val[0] + this.sliderMin
         this.unix2 = val[1] + this.sliderMin
 
@@ -393,8 +392,8 @@
       this.addAllIntoSelection()
 
       // disable map cashing
-      console.log('PROJECT', this.$project)
-      console.log('OWS', this.$project.ows_url)
+//      console.log('PROJECT', this.$project)
+//      console.log('OWS', this.$project.ows_url)
       const map = this.$map
       if (!(map.overlay instanceof ImageLayer)) {
         // create and switch to WMS layer
@@ -420,8 +419,7 @@
         // set as new main map's layer
         map.addLayer(this.layer)
         map.overlay = this.layer
-      }
-      else {
+      } else {
         this.layer = map.overlay
       }
     },
@@ -448,7 +446,7 @@
     methods: {
       // initialize slider --> single layer
       initializeSliderSingle (value) {
-        console.log('INIT SIGNLE')
+//        console.log('INIT SIGNLE')
         this.openInfo = true
         this.outputDateMask = value.output_datetime_mask
         this.maskIncludeDate(this.outputDateMask)
@@ -465,7 +463,7 @@
 
       // initialize slider --> multiple layers
       initializeSliderMultiple (attribute) {
-        console.log('INIT MULTIPLE')
+//        console.log('INIT MULTIPLE')
         this.openInfo = true
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)  // && l.original_time_attribute === attribute
         this.setDateMask(visibleLayers)
@@ -493,7 +491,7 @@
 
       // set slider values by last used one
       setSliderValue (step) {
-        console.log('GET VALUE')
+//        console.log('GET VALUE')
         if (this.layerModel.unix1) {
           this.unix1 = this.layerModel.unix1
         } else {
@@ -587,7 +585,7 @@
         this.setStepValue = null
         this.setTimeStep = null
         if (this.timeData && this.timeData.selectAllLayers) {
-          console.log('RESET ATR')
+//          console.log('RESET ATR')
           this.attribute = null
           this.openInfo = false
           this.attributesSelection = []
