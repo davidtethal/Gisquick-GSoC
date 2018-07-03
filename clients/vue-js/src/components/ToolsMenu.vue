@@ -38,10 +38,15 @@ export default {
     this.tools = [
       Identification,
       Measure,
-      Slider,
       Print
     ]
-  },
+    for (let i = 0; i < this.$project.layers.length; i++) {
+      if (this.$project.layers[i].time_values && this.$project.layers[i].time_values.length > 0) {
+        break
+      }
+    }
+
+    },
   methods: {
     activate (tool) {
       if (tool.activate) {
