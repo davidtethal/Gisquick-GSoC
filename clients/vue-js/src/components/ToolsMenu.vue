@@ -42,11 +42,11 @@ export default {
     ]
     for (let i = 0; i < this.$project.layers.length; i++) {
       if (this.$project.layers[i].time_values && this.$project.layers[i].time_values.length > 0) {
+        this.tools.push(Slider)
         break
       }
     }
-
-    },
+  },
   methods: {
     activate (tool) {
       if (tool.activate) {
