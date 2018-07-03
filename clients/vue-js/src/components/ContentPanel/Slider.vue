@@ -141,7 +141,13 @@
       </div>
       <div class="animate-row">
         <p>speed</p>
-        <v-slider class="speed-slider" v-model="animationSpeed" step="0.1" min="0" max="4"></v-slider>
+        <v-slider class="speed-slider"
+                  v-model="animationSpeed"
+                  step="0.1"
+                  min="0"
+                  max="4"
+        ></v-slider>
+        <!--thumbLabel="false"-->
       </div>
       <div class="animate-row">
         <p>step</p>
@@ -367,13 +373,9 @@
 //        this.sliderValue[1] = this.unix2
       },
       animationSpeed (val) {
-//        const speed =
+//        this.frameRate = val
+        // quadratic function for frame rate
         this.frameRate = 0.2813 * val * val - 2.063 * val + 4
-//
-//        if (val < 2) {
-//          this.frameRate = Math.floor(speed)
-//        } else {
-//        }
       },
       setStepValue (val) {
         this.changeTimeStep()
@@ -418,6 +420,9 @@
         // set as new main map's layer
         map.addLayer(this.layer)
         map.overlay = this.layer
+      }
+      else {
+        this.layer = map.overlay
       }
     },
 
@@ -778,7 +783,7 @@
 
   .range-container {
     display: flex !important;
-    padding-top: 20px;
+    padding-top: 30px;
   }
 
   .double-range {

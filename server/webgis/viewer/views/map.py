@@ -32,6 +32,13 @@ def ows(request):
     abs_project = abs_project_path(params.get('MAP'))
     url = set_query_parameters(url, {'MAP': abs_project})
 
+    print('**URL**', url)
+    import sys
+    sys.stdout.flush()
+
+    import urllib.parse
+    print('**URL-PARSE**', urllib.parse.unquote(url))
+
     owsrequest = urllib.request.Request(url)
     owsrequest.add_header("User-Agent", "Gisquick")
 
