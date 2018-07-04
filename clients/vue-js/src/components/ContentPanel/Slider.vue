@@ -296,8 +296,9 @@
           }
 
         // case of one layer
-        } else if (!value.selectAllLayers) {
+        } else if (value.type === 'vector') {
           this.initializeSliderSingle(value)
+        } else {
         }
       },
       // contain currently selected layer
@@ -388,6 +389,7 @@
     },
 
     created () {
+      console.log('PROJECT', this.$project)
       // add "select all layers" into layer select
       this.addAllIntoSelection()
 

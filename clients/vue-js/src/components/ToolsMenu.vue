@@ -41,7 +41,9 @@ export default {
       Print
     ]
     for (let i = 0; i < this.$project.layers.length; i++) {
-      if (this.$project.layers[i].time_values && this.$project.layers[i].time_values.length > 0) {
+      if (this.$project.layers[i].time_values &&
+          this.$project.layers[i].time_values.length > 0 ||
+          this.$project.layers[i].spatio_temporal) {
         this.tools.push(Slider)
         break
       }
