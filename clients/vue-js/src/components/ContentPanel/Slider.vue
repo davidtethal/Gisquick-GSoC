@@ -168,6 +168,10 @@
     </div>
 
     <div v-if="openRaster">
+      <v-text-field
+        v-model="rasterDate"
+        readonly
+      ></v-text-field>
       <vue-slider
         v-bind="rasterSliderOptions"
         v-model="rasterSliderValue"
@@ -407,6 +411,10 @@
       },
       stickySlide (val) {
         this.sliderOptions.fixed = val
+      },
+      rasterSliderValue (val) {
+        this.getNewRaster()
+        this.rasterDate = moment(val * 1000).format('YYYY-MM-DD')
       }
     },
 
