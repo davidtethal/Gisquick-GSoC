@@ -16,7 +16,7 @@
       v-model="attribute"
     />
 
-    <div v-if="openInfo">
+    <div v-if="openVector">
       <!--datepicker 1-->
       <v-menu
         ref="menu1"
@@ -99,18 +99,18 @@
       <v-icon
 
         class="animate-icon"
-        v-if="animateStop && openInfo"
+        v-if="animateStop && openVector"
         @click="animate(animateStop)">
         play_circle_outline
       </v-icon>
       <v-icon
         class="animate-icon"
-        v-if="!animateStop && openInfo"
+        v-if="!animateStop && openVector"
         @click="animate(animateStop)">
         pause_circle_outline
       </v-icon>
       <vue-slider
-        v-bind:class="{ hidden: !openInfo }"
+        v-bind:class="{ hidden: !openVector }"
         class="double-range"
         ref="slider"
         v-model="sliderValue"
@@ -118,7 +118,7 @@
         @drag-end="getNewUrl()">
       </vue-slider>
       <v-icon
-        v-if="openInfo"
+        v-if="openVector"
         class="animate-icon"
         @click="animationSettings = !animationSettings">
         settings
@@ -167,6 +167,14 @@
       </div>
     </div>
 
+    <div v-if="openRaster">
+      <vue-slider
+        v-bind="rasterSliderOptions"
+        v-model="rasterSliderValue"
+        @drag-end="getNewRaster()">
+      </vue-slider>
+    </div>
+
   </div>
 </template>
 
@@ -187,7 +195,8 @@
         layers: layersList(this.$project.layers, true),
         timeData: null,
         attribute: null,
-        openInfo: false,
+        openVector: false,
+        openRaster: false,
         sliderCreated: false,
 
         // selects lists
@@ -259,7 +268,40 @@
           processStyle: {
             'backgroundColor': '#1976D2'
           }
-        }
+        },
+
+        rasterSliderValue: 0,
+        rasterSliderOptions: {
+          height: 2,
+          dotSize: 12,
+          min: 0,
+          max: 1E+20,
+          disabled: false,
+          show: true,
+          fixed: false,
+          processDragable: true,
+          useKeyboard: true,
+          tooltip: false,
+          sliderStyle: [
+            {
+              'backgroundColor': '#1976D2'
+            },
+            {
+              'backgroundColor': '#1976D2'
+            }
+          ],
+          bgStyle: {
+            'backgroundColor': '#fff',
+            'boxShadow': 'inset 0.5px 0.5px 3px 1px rgba(0,0,0,.25)'
+          },
+          processStyle: {
+            'backgroundColor': '#1976D2'
+          },
+          piecewise: true,
+          data: [0, 1]
+        },
+
+        rasterGroupLayers: []
       }
     },
 
@@ -281,11 +323,6 @@
     watch: {
       // triggers after time layer is selected
       timeData (value) {
-//        this.cumulatively = false
-//        this.animateStop = true
-//        this.attributesSelection = []
-//        this.attribute = null
-
         // case of all layers
         if (value.selectAllLayers) {
           this.checkMultipleAttributes()
@@ -299,6 +336,10 @@
         } else if (value.type === 'vector') {
           this.initializeSliderSingle(value)
         } else {
+          this.initializeRasterSlider(value)
+          this.rasterGroupLayers = value.layers
+          this.openRaster = true
+          this.getNewRaster()
         }
       },
       // contain currently selected layer
@@ -315,29 +356,16 @@
       sliderValue (val) {
         this.unix1 = val[0] + this.sliderMin
         this.unix2 = val[1] + this.sliderMin
-
-//        if (val[0] >= val[1] - this.step) {
-//          this.unix2 = val[0] + this.step
-//          this.sliderValue[0] = this.unix2
-//        }
-//        if (val[1] <= val[0] + this.step) {
-//          this.unix1 = val[1] - this.step
-//          this.sliderValue[1] = this.unix1
-//        }
       },
       // slider values
       unix1 (val) {
         this.userDate1 = moment(val * 1000).format(this.outputDateMask)
         this.pickerDate1 = moment(val * 1000).format('YYYY-MM-DD')
         this.pickerTime1 = moment(val * 1000).format('HH:mm')
-//        console.log('UNIX1', val - this.sliderMin, this.unix2 - this.sliderMin)
 
         this.sliderValue[0] = val - this.sliderMin
         this.sliderValue[1] = this.unix2 - this.sliderMin
         this.$refs.slider.setValue([val - this.sliderMin, this.unix2 - this.sliderMin])
-//        if (this.$refs.slider) {
-//          console.log(this.sliderValue[0])
-//        }
       },
       unix2 (val) {
         this.userDate2 = moment(val * 1000).format(this.outputDateMask)
@@ -347,9 +375,6 @@
         this.sliderValue[0] = this.unix1 - this.sliderMin
         this.sliderValue[1] = val - this.sliderMin
         this.$refs.slider.setValue([this.unix1 - this.sliderMin, val - this.sliderMin])
-//        console.log('UNIX2', this.unix1 - this.sliderMin, val - this.sliderMin)
-//        if (this.$refs.slider) {
-//        }
       },
       // date picker
       pickerDate1 (val) {
@@ -359,18 +384,15 @@
       pickerDate2 (val) {
         const dateAndTime = `${val}-${this.pickerTime2}`
         this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
-//        this.sliderValue[1] = this.unix2
       },
       // time picker
       pickerTime1 (val) {
         const dateAndTime = `${this.pickerDate1}-${val}`
         this.unix1 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
-//        this.sliderValue[0] = this.unix1
       },
       pickerTime2 (val) {
         const dateAndTime = `${this.pickerDate2}-${val}`
         this.unix2 = moment(dateAndTime, 'YYYY-MM-DD-HH:mm').unix()
-//        this.sliderValue[1] = this.unix2
       },
       animationSpeed (val) {
 //        this.frameRate = val
@@ -449,7 +471,7 @@
       // initialize slider --> single layer
       initializeSliderSingle (value) {
 //        console.log('INIT SIGNLE')
-        this.openInfo = true
+        this.openVector = true
         this.outputDateMask = value.output_datetime_mask
         this.maskIncludeDate(this.outputDateMask)
         this.hasTime = this.outputDateMask.includes('HH:mm')
@@ -466,7 +488,7 @@
       // initialize slider --> multiple layers
       initializeSliderMultiple (attribute) {
 //        console.log('INIT MULTIPLE')
-        this.openInfo = true
+        this.openVector = true
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)  // && l.original_time_attribute === attribute
         this.setDateMask(visibleLayers)
         this.maskIncludeDate(this.outputDateMask)
@@ -480,13 +502,18 @@
         this.unix2 = minmax[0] + this.step
       },
 
+      initializeRasterSlider (group) {
+        console.log('RATSER', group)
+        this.getRasterSliderRange(group)
+      },
+
       // set selected layer visible
       setModelVisibility (model, visible) {
         const visibleLayers = this.$overlays.list.filter(l => l.visible)
-        if (visible && !model.selectAllLayers) {
+        if (!model.selectAllLayers) {
           visibleLayers.push(model)
-          model._visible = true
-          model.visible = true
+          model._visible = visible
+          model.visible = visible
         }
         this.layer.getSource().setVisibleLayers(visibleLayers.map(l => l.name))
       },
@@ -525,6 +552,21 @@
         } else {
           this.updateSingleLayer()
         }
+      },
+
+      getNewRaster () {
+//        console.log(this.rasterSliderValue)
+//        console.log(this.rasterGroupLayers)
+        let model = null
+        this.rasterGroupLayers.forEach(l => {
+          if (parseInt(l.time_stamp) === this.rasterSliderValue) {
+            model = l
+          }
+          this.setModelVisibility(l, false)
+        })
+//        this.layer.getSource().updateParams({'LAYERS': model.name})
+        console.log(model.name)
+        this.setModelVisibility(model, true)
       },
 
       updateSingleLayer () {
@@ -587,9 +629,8 @@
         this.setStepValue = null
         this.setTimeStep = null
         if (this.timeData && this.timeData.selectAllLayers) {
-//          console.log('RESET ATR')
           this.attribute = null
-          this.openInfo = false
+          this.openVector = false
           this.attributesSelection = []
           this.checkMultipleAttributes()
           if (this.attributesSelection.length === 1) {
@@ -612,7 +653,7 @@
 
       // find unique attributes
       checkMultipleAttributes () {
-        this.openInfo = false
+        this.openVector = false
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
         this.attributesSelection = [...new Set(visibleLayers.map(l => l.original_time_attribute))]
         this.attributesSelection.unshift('All attributes')
@@ -631,6 +672,18 @@
           }
         }
         return [min, max]
+      },
+
+      // get min and max from raster slider
+      getRasterSliderRange (group) {
+        const rasterLayersTimeValues = []
+        group.layers.forEach(l => { rasterLayersTimeValues.push(parseInt(l.time_stamp)) })
+        console.log(rasterLayersTimeValues)
+        this.rasterSliderOptions.data = rasterLayersTimeValues
+        this.rasterSliderOptions.max = Math.max.apply(null, rasterLayersTimeValues)
+        this.rasterSliderOptions.min = Math.min.apply(null, rasterLayersTimeValues)
+        this.rasterSliderValue = this.rasterSliderOptions.min
+        console.log(this.sliderOptions)
       },
 
       // set date mask in cas of multiple layers
