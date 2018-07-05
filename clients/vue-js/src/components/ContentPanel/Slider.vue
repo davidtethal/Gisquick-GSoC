@@ -421,7 +421,7 @@
     created () {
       console.log('PROJECT', this.$project)
       // add "select all layers" into layer select
-      this.addAllIntoSelection()
+      this.addLayersIntoDropdown()
 
       // disable map cashing
 //      console.log('PROJECT', this.$project)
@@ -511,7 +511,6 @@
       },
 
       initializeRasterSlider (group) {
-        console.log('RATSER', group)
         this.getRasterSliderRange(group)
       },
 
@@ -563,8 +562,6 @@
       },
 
       getNewRaster () {
-//        console.log(this.rasterSliderValue)
-//        console.log(this.rasterGroupLayers)
         let model = null
         this.rasterGroupLayers.forEach(l => {
           if (parseInt(l.time_stamp) === this.rasterSliderValue) {
@@ -572,9 +569,8 @@
           }
           this.setModelVisibility(l, false)
         })
-//        this.layer.getSource().updateParams({'LAYERS': model.name})
-        console.log(model.name)
         this.setModelVisibility(model, true)
+//        this.layer.getSource().updateParams({'OPACITIES': 200})
       },
 
       updateSingleLayer () {
@@ -649,13 +645,21 @@
       },
 
       // add "All visible layers" option into layers select
-      addAllIntoSelection () {
-        const all = {
-          name: 'All visible layers',
-          title: 'All visible layers',
-          selectAllLayers: true
+      addLayersIntoDropdown () {
+        let containVector = false
+        this.$project.layers.forEach(l => {
+          if (l.type === 'vector') {
+            containVector = true
+          }
+        })
+        if (containVector) {
+          const all = {
+            name: 'All visible layers',
+            title: 'All visible layers',
+            selectAllLayers: true
+          }
+          this.layersSelection.push(all)
         }
-        this.layersSelection.push(all)
         this.$project.layers.forEach(l => { this.layersSelection.push(l) })
       },
 
@@ -686,12 +690,11 @@
       getRasterSliderRange (group) {
         const rasterLayersTimeValues = []
         group.layers.forEach(l => { rasterLayersTimeValues.push(parseInt(l.time_stamp)) })
-        console.log(rasterLayersTimeValues)
+        rasterLayersTimeValues.sort(function(a, b){return a - b})
         this.rasterSliderOptions.data = rasterLayersTimeValues
         this.rasterSliderOptions.max = Math.max.apply(null, rasterLayersTimeValues)
         this.rasterSliderOptions.min = Math.min.apply(null, rasterLayersTimeValues)
         this.rasterSliderValue = this.rasterSliderOptions.min
-        console.log(this.sliderOptions)
       },
 
       // set date mask in cas of multiple layers
