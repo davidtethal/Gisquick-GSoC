@@ -551,7 +551,11 @@
       },
 
       initializeRasterSlider (group) {
-        this.getRasterSliderRange(group)
+        const layersTimeValues = this.getRasterSliderRange(group)
+        this.rasterSliderOptions.data = layersTimeValues
+        this.rasterSliderOptions.max = Math.max.apply(null, layersTimeValues)
+        this.rasterSliderOptions.min = Math.min.apply(null, layersTimeValues)
+        this.rasterSliderValue = this.rasterSliderOptions.min
       },
 
       // set selected layer visible
@@ -611,12 +615,11 @@
           this.setModelVisibility(l, false)
         })
         this.setModelVisibility(model, true)
-        console.log(this.rasterOpacity)
+//        console.log(this.rasterOpacity)
 //        this.layer.getSource().updateParams({'OPACITIES': `0, ${this.rasterOpacity}`})
       },
 
       updateSingleLayer () {
-//        console.log('SINGLE')
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
         let modelFilter = ''
         if (this.timeData.unix) {
@@ -647,7 +650,6 @@
       },
 
       updateMultipleLayers () {
-//        console.log('MULTIPLE')
         const attribute = this.attribute || this.attributesSelection[0]
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
         let filterIncrement = ''
@@ -708,13 +710,14 @@
 
       // add "All visible layers" option into layers select
       addLayersIntoDropdown () {
-        let containVector = false
+        let containVector = 0
         this.$project.layers.forEach(l => {
-          if (l.type === 'vector') {
-            containVector = true
+          if (l.time_values &&
+              l.time_values.length > 0) {
+            containVector += 1
           }
         })
-        if (containVector) {
+        if (containVector > 1) {
           const all = {
             name: 'All visible layers',
             title: 'All visible layers',
@@ -759,10 +762,7 @@
         const rasterLayersTimeValues = []
         group.layers.forEach(l => { rasterLayersTimeValues.push(parseInt(l.time_stamp)) })
         rasterLayersTimeValues.sort(function (a, b) { return a - b })
-        this.rasterSliderOptions.data = rasterLayersTimeValues
-        this.rasterSliderOptions.max = Math.max.apply(null, rasterLayersTimeValues)
-        this.rasterSliderOptions.min = Math.min.apply(null, rasterLayersTimeValues)
-        this.rasterSliderValue = this.rasterSliderOptions.min
+        return rasterLayersTimeValues
       },
 
       // set date mask in cas of multiple layers
@@ -798,7 +798,6 @@
 
       // simple animation
       animate (play) {
-        this.timeData
         if (play) {
           this.animateStop = false
           this.newFrame()
@@ -831,8 +830,6 @@
           this.getNewVector()
         } else {
           let index = this.rasterSliderOptions.data.indexOf(this.rasterSliderValue)
-          console.log(index)
-          console.log(this.rasterSliderOptions.data.length)
           if (index === this.rasterSliderOptions.data.length - 1) {
             index = 0
           } else {
