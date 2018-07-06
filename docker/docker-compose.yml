@@ -3,7 +3,6 @@ services:
   qgisserver:
     restart: always
     image: gisquick/qgis-server
-#    image: kartoza/qgis-server:3.0
     volumes:
       - ./_data/publish:/publish/:ro
     ports:
@@ -11,7 +10,7 @@ services:
 
   django:
     restart: always
-    image: docker.io/davidtethal/gisquick-vue
+    image: davidtethal/gisquick-raster
 #    image: gisquick/django
     links:
       - qgisserver

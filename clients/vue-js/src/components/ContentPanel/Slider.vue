@@ -17,7 +17,7 @@
     />
 
     <div v-if="openVector">
-      <!--datepicker 1-->
+      <!--VECTOR datepicker 1-->
       <v-menu
         ref="menu1"
         lazy
@@ -51,13 +51,13 @@
           <v-btn flat color="primary" @click="menu1 = false; resetTime(1)">
             Cancel
           </v-btn>
-          <v-btn class="right" flat color="primary" @click="$refs.menu1.save(pickerDate1); getNewUrl()">
+          <v-btn class="right" flat color="primary" @click="$refs.menu1.save(pickerDate1); getNewVector()">
             OK
           </v-btn>
         </v-date-picker>
       </v-menu>
 
-      <!--datepicker 2-->
+      <!--VECTOR datepicker 2-->
       <v-menu
         ref="menu2"
         lazy
@@ -87,17 +87,25 @@
           <v-btn flat color="primary" @click="menu2 = false; resetTime(2)">
             Cancel
           </v-btn>
-          <v-btn class="right" flat color="primary" @click="$refs.menu2.save(pickerDate2); getNewUrl()">
+          <v-btn class="right" flat color="primary" @click="$refs.menu2.save(pickerDate2); getNewVector()">
             OK
           </v-btn>
         </v-date-picker>
       </v-menu>
     </div>
 
-    <!--double range slider-->
-    <div class="range-container">
-      <v-icon
+    <!--RASTER date-->
+    <div v-if="openRaster">
+      <v-text-field
+        v-model="rasterDate"
+        readonly
+      ></v-text-field>
+    </div>
 
+    <!--VECTOR double range slider-->
+    <div class="range-container"
+         v-if="!openRaster">
+      <v-icon
         class="animate-icon"
         v-if="animateStop && openVector"
         @click="animate(animateStop)">
@@ -111,11 +119,11 @@
       </v-icon>
       <vue-slider
         v-bind:class="{ hidden: !openVector }"
-        class="double-range"
+        class="time-slider"
         ref="slider"
         v-model="sliderValue"
         v-bind="sliderOptions"
-        @drag-end="getNewUrl()">
+        @drag-end="getNewVector()">
       </vue-slider>
       <v-icon
         v-if="openVector"
@@ -124,15 +132,48 @@
         settings
       </v-icon>
     </div>
+
+    <!--RASTER range slider-->
+    <div class="range-container">
+      <v-icon
+        class="animate-icon"
+        v-if="animateStop && openRaster"
+        @click="animate(animateStop)">
+        play_circle_outline
+      </v-icon>
+      <v-icon
+        class="animate-icon"
+        v-if="!animateStop && openRaster"
+        @click="animate(animateStop)">
+        pause_circle_outline
+      </v-icon>
+      <vue-slider
+        v-bind:class="{ hidden: !openRaster }"
+        class="time-slider"
+        v-bind="rasterSliderOptions"
+        v-model="rasterSliderValue"
+        @drag-end="getNewRaster()">
+      </vue-slider>
+      <v-icon
+        v-if="openRaster"
+        class="animate-icon"
+        @click="animationSettings = !animationSettings">
+        settings
+      </v-icon>
+    </div>
+
+    <!--slider settings-->
     <div v-bind:class="{ 'settings-container': animationSettings }"  v-if="animationSettings">
-      <div class="animate-row">
+      <div class="animate-row"
+           v-if="openVector">
         <p>fixed</p>
         <v-switch
           class="cumulatively"
           v-model="stickySlide"
         ></v-switch>
       </div>
-      <div class="animate-row">
+      <div class="animate-row"
+           v-if="openVector">
         <p>cumulative</p>
         <v-switch
           class="cumulatively"
@@ -149,7 +190,8 @@
         ></v-slider>
         <!--thumbLabel="false"-->
       </div>
-      <div class="animate-row">
+      <div class="animate-row"
+           v-if="openVector">
         <p>step</p>
         <v-text-field
           class="step-text ml-20"
@@ -165,18 +207,15 @@
         />
         <!--:items="timeSteps"-->
       </div>
-    </div>
-
-    <div v-if="openRaster">
-      <v-text-field
-        v-model="rasterDate"
-        readonly
-      ></v-text-field>
-      <vue-slider
-        v-bind="rasterSliderOptions"
-        v-model="rasterSliderValue"
-        @drag-end="getNewRaster()">
-      </vue-slider>
+      <div class="animate-row"
+           v-if="openRaster">
+        <p>opacity</p>
+        <v-slider class="speed-slider"
+                  v-model="rasterOpacity"
+                  min="0"
+                  max="250"
+        ></v-slider>
+      </div>
     </div>
 
   </div>
@@ -305,7 +344,8 @@
           data: [0, 1]
         },
 
-        rasterGroupLayers: []
+        rasterGroupLayers: [],
+        rasterOpacity: 250
       }
     },
 
@@ -490,7 +530,7 @@
         this.unix1 = this.sliderMin
         this.unix2 = this.unix1 + this.step
         this.setSliderValue(this.step)
-        this.getNewUrl()
+        this.getNewVector()
       },
 
       // initialize slider --> multiple layers
@@ -552,8 +592,8 @@
         return filter
       },
 
-      // update WMS url
-      getNewUrl () {
+      // update WMS vector layer
+      getNewVector () {
         if (this.layerModel.selectAllLayers) {
           this.updateMultipleLayers()
         } else {
@@ -561,6 +601,7 @@
         }
       },
 
+      // update WMS raster layer
       getNewRaster () {
         let model = null
         this.rasterGroupLayers.forEach(l => {
@@ -570,7 +611,8 @@
           this.setModelVisibility(l, false)
         })
         this.setModelVisibility(model, true)
-//        this.layer.getSource().updateParams({'OPACITIES': 200})
+        console.log(this.rasterOpacity)
+//        this.layer.getSource().updateParams({'OPACITIES': `0, ${this.rasterOpacity}`})
       },
 
       updateSingleLayer () {
@@ -578,11 +620,21 @@
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
         let modelFilter = ''
         if (this.timeData.unix) {
-          modelFilter = `${this.timeData.name}:"${this.timeData.time_attribute}" >= '${this.unix1}' AND "${this.timeData.time_attribute}" <= '${this.unix2}'`
+          modelFilter = `
+            ${this.timeData.name}:
+            "${this.timeData.time_attribute}" >=
+            '${this.unix1}' AND
+            "${this.timeData.time_attribute}" <=
+            '${this.unix2}'`
         } else {
           const dateTimeUnix1 = moment(this.unix1 * 1000).format(this.timeData.input_datetime_mask)
           const dateTimeUnix2 = moment(this.unix2 * 1000).format(this.timeData.input_datetime_mask)
-          modelFilter = `${this.timeData.name}:"${this.timeData.original_time_attribute}" >= '${dateTimeUnix1}' AND "${this.timeData.original_time_attribute}" <= '${dateTimeUnix2}'`
+          modelFilter = `
+            ${this.timeData.name}:
+            "${this.timeData.original_time_attribute}" >=
+            '${dateTimeUnix1}' AND
+            "${this.timeData.original_time_attribute}" <=
+            '${dateTimeUnix2}'`
         }
         const filter = `${modelFilter}${otherLayerFilter}`
         this.layerModel.title = `${this.timeData.name}-${moment(this.unix1 * 1000).format(this.outputDateMask)}`
@@ -603,11 +655,21 @@
         for (let i = 0; i < visibleLayers.length; i++) {
           if (visibleLayers[i].original_time_attribute === attribute || attribute === 'All attributes') {
             if (visibleLayers[i].unix) {
-              filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].time_attribute}" >= '${this.unix1}' AND "${visibleLayers[i].time_attribute}" <= '${this.unix2}'`
+              filterIncrement = `
+                ;${visibleLayers[i].name}:
+                "${visibleLayers[i].time_attribute}" >=
+                '${this.unix1}' AND
+                "${visibleLayers[i].time_attribute}" <=
+                '${this.unix2}'`
             } else {
               const dateTimeUnix1 = moment(this.unix1 * 1000).format(visibleLayers[i].input_datetime_mask)
               const dateTimeUnix2 = moment(this.unix2 * 1000).format(visibleLayers[i].input_datetime_mask)
-              filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].original_time_attribute}" >= '${dateTimeUnix1}' AND "${visibleLayers[i].original_time_attribute}" <= '${dateTimeUnix2}'`
+              filterIncrement = `
+                ;${visibleLayers[i].name}:
+                "${visibleLayers[i].original_time_attribute}" >=
+                '${dateTimeUnix1}' AND
+                "${visibleLayers[i].original_time_attribute}" <=
+                '${dateTimeUnix2}'`
             }
             filter += filterIncrement
             visibleLayers[i].title = `${visibleLayers[i].name}-${moment(this.unix1 * 1000).format(this.outputDateMask)}`
@@ -660,7 +722,13 @@
           }
           this.layersSelection.push(all)
         }
-        this.$project.layers.forEach(l => { this.layersSelection.push(l) })
+        this.$project.layers.forEach(l => {
+          if ((l.time_values &&
+               l.time_values.length > 0) ||
+               l.spatio_temporal) {
+            this.layersSelection.push(l)
+          }
+        })
       },
 
       // find unique attributes
@@ -690,7 +758,7 @@
       getRasterSliderRange (group) {
         const rasterLayersTimeValues = []
         group.layers.forEach(l => { rasterLayersTimeValues.push(parseInt(l.time_stamp)) })
-        rasterLayersTimeValues.sort(function(a, b){return a - b})
+        rasterLayersTimeValues.sort(function (a, b) { return a - b })
         this.rasterSliderOptions.data = rasterLayersTimeValues
         this.rasterSliderOptions.max = Math.max.apply(null, rasterLayersTimeValues)
         this.rasterSliderOptions.min = Math.min.apply(null, rasterLayersTimeValues)
@@ -730,6 +798,7 @@
 
       // simple animation
       animate (play) {
+        this.timeData
         if (play) {
           this.animateStop = false
           this.newFrame()
@@ -740,25 +809,38 @@
 
       // one animation step
       newFrame () {
-        if (this.cumulatively) {
-          if (this.unix2 < this.sliderMax - this.step) {
-            this.unix2 += this.step
-          } else if (this.unix1 < this.sliderMax - 2 * this.step) {
-            this.unix1 += this.step
+        if (this.timeData.type === 'vector') {
+          if (this.cumulatively) {
+            if (this.unix2 < this.sliderMax - this.step) {
+              this.unix2 += this.step
+            } else if (this.unix1 < this.sliderMax - 2 * this.step) {
+              this.unix1 += this.step
+            } else {
+              this.animateStop = true
+              return
+            }
           } else {
-            this.animateStop = true
-            return
+            if (this.unix2 < this.sliderMax - this.step) {
+              this.unix1 += this.step
+              this.unix2 += this.step
+            } else {
+              this.animateStop = true
+              return
+            }
           }
+          this.getNewVector()
         } else {
-          if (this.unix2 < this.sliderMax - this.step) {
-            this.unix1 += this.step
-            this.unix2 += this.step
+          let index = this.rasterSliderOptions.data.indexOf(this.rasterSliderValue)
+          console.log(index)
+          console.log(this.rasterSliderOptions.data.length)
+          if (index === this.rasterSliderOptions.data.length - 1) {
+            index = 0
           } else {
-            this.animateStop = true
-            return
+            index += 1
           }
+          this.rasterSliderValue = this.rasterSliderOptions.data[index]
+          this.getNewRaster()
         }
-        this.getNewUrl()
         if (!this.animateStop) {
           setTimeout(this.newFrame, this.frameRate * 1000)
         }
@@ -850,7 +932,7 @@
     padding-top: 30px;
   }
 
-  .double-range {
+  .time-slider {
     margin: 0 20px;
     width: 80% !important;
     height: 15px;
