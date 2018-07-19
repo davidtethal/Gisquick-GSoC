@@ -280,8 +280,8 @@
           {name: 'minutes', inUnix: 60},
           {name: 'hours', inUnix: 3600},
           {name: 'days', inUnix: 86400},
-          {name: 'months', inUnix: 2629743},
-          {name: 'years', inUnix: 31556926}
+          {name: 'months', inUnix: 2592000},
+          {name: 'years', inUnix: 31536000}
         ],
 
         sliderValue: [0, 0],
@@ -615,8 +615,18 @@
           this.setModelVisibility(l, false)
         })
         this.setModelVisibility(model, true)
-//        console.log(this.rasterOpacity)
-//        this.layer.getSource().updateParams({'OPACITIES': `0, ${this.rasterOpacity}`})
+        const layersArray = this.$overlays.list.filter(l => l.visible)
+        layersArray.sort((a, b) => a.drawing_order - b.drawing_order)
+        let opacity = ''
+        for (let i = 0; i < layersArray.length; i++) {
+          if (layersArray[i].title === model.name) {
+            opacity += `${this.rasterOpacity}, `
+          } else {
+            opacity += `250, `
+          }
+        }
+        console.log('opacity', opacity)
+        this.layer.getSource().updateParams({'OPACITIES': opacity})
       },
 
       updateSingleLayer () {
