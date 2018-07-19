@@ -179,8 +179,8 @@
       <vue-slider
         class="time-slider"
         v-bind="rasterSliderOptions"
-        v-model="rasterSliderValue"
-        @drag-end="getNewRaster()">
+        v-model="rasterSliderValue">
+        <!--@drag-end="getNewRaster()"-->
       </vue-slider>
       <v-icon
         v-if="openRaster"
@@ -640,17 +640,16 @@
           this.setModelVisibility(l, false)
         })
         this.setModelVisibility(model, true)
-        const layersArray = this.$overlays.list.filter(l => l.visible)
-        layersArray.sort((a, b) => a.drawing_order - b.drawing_order)
+        const layersArray = this.layer.getSource().getVisibleLayers()
         let opacity = ''
         for (let i = 0; i < layersArray.length; i++) {
-          if (layersArray[i].title === model.name) {
+          if (layersArray[i] === model.name) {
             opacity += `${this.rasterOpacity}, `
           } else {
             opacity += `250, `
           }
         }
-        console.log('opacity', opacity)
+        console.log(opacity)
         this.layer.getSource().updateParams({'OPACITIES': opacity})
       },
 
@@ -658,21 +657,11 @@
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
         let modelFilter = ''
         if (this.timeData.unix) {
-          modelFilter = `
-            ${this.timeData.name}:
-            "${this.timeData.time_attribute}" >=
-            '${this.unix1}' AND
-            "${this.timeData.time_attribute}" <=
-            '${this.unix2}'`
+          modelFilter = `${this.timeData.name}:"${this.timeData.time_attribute}" >= '${this.unix1}' AND "${this.timeData.time_attribute}" <= '${this.unix2}'`
         } else {
           const dateTimeUnix1 = moment(this.unix1 * 1000).format(this.timeData.input_datetime_mask)
           const dateTimeUnix2 = moment(this.unix2 * 1000).format(this.timeData.input_datetime_mask)
-          modelFilter = `
-            ${this.timeData.name}:
-            "${this.timeData.original_time_attribute}" >=
-            '${dateTimeUnix1}' AND
-            "${this.timeData.original_time_attribute}" <=
-            '${dateTimeUnix2}'`
+          modelFilter = `${this.timeData.name}:"${this.timeData.original_time_attribute}" >= '${dateTimeUnix1}' AND "${this.timeData.original_time_attribute}" <= '${dateTimeUnix2}'`
         }
         const filter = `${modelFilter}${otherLayerFilter}`
         this.layerModel.title = `${this.timeData.name}-${moment(this.unix1 * 1000).format(this.outputDateMask)}`
@@ -692,21 +681,11 @@
         for (let i = 0; i < visibleLayers.length; i++) {
           if (visibleLayers[i].original_time_attribute === attribute || attribute === 'All attributes') {
             if (visibleLayers[i].unix) {
-              filterIncrement = `
-                ;${visibleLayers[i].name}:
-                "${visibleLayers[i].time_attribute}" >=
-                '${this.unix1}' AND
-                "${visibleLayers[i].time_attribute}" <=
-                '${this.unix2}'`
+              filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].time_attribute}" >= '${this.unix1}' AND "${visibleLayers[i].time_attribute}" <= '${this.unix2}'`
             } else {
               const dateTimeUnix1 = moment(this.unix1 * 1000).format(visibleLayers[i].input_datetime_mask)
               const dateTimeUnix2 = moment(this.unix2 * 1000).format(visibleLayers[i].input_datetime_mask)
-              filterIncrement = `
-                ;${visibleLayers[i].name}:
-                "${visibleLayers[i].original_time_attribute}" >=
-                '${dateTimeUnix1}' AND
-                "${visibleLayers[i].original_time_attribute}" <=
-                '${dateTimeUnix2}'`
+              filterIncrement = `;${visibleLayers[i].name}:"${visibleLayers[i].original_time_attribute}" >= '${dateTimeUnix1}' AND "${visibleLayers[i].original_time_attribute}" <= '${dateTimeUnix2}'`
             }
             filter += filterIncrement
             visibleLayers[i].title = `${visibleLayers[i].name}-${moment(this.unix1 * 1000).format(this.outputDateMask)}`
@@ -872,7 +851,7 @@
             index += 1
           }
           this.rasterSliderValue = this.rasterSliderOptions.data[index]
-          this.getNewRaster()
+//          this.getNewRaster()
         }
         if (!this.animateStop) {
           setTimeout(this.newFrame, this.frameRate * 1000)
