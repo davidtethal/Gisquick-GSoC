@@ -103,8 +103,9 @@
     </div>
 
     <!--VECTOR double range slider-->
-    <div class="range-container"
+    <!--<div class="range-container"
          v-if="!openRaster">
+      &lt;!&ndash;v-bind:class="{ hidden: !openVector }"&ndash;&gt;
       <v-icon
         class="animate-icon"
         v-if="animateStop && openVector"
@@ -118,7 +119,35 @@
         pause_circle_outline
       </v-icon>
       <vue-slider
-        v-bind:class="{ hidden: !openVector }"
+        class="time-slider"
+        ref="slider"
+        v-model="sliderValue"
+        v-bind="sliderOptions"
+        @drag-end="getNewVector()">
+      </vue-slider>
+      <v-icon
+        v-if="openVector"
+        class="animate-icon"
+        @click="animationSettings = !animationSettings">
+        settings
+      </v-icon>
+    </div>-->
+    <div class="range-container"
+         v-if="!openRaster"
+         v-bind:class="{ hidden: !openVector }">
+      <v-icon
+        class="animate-icon"
+        v-if="animateStop && openVector"
+        @click="animate(animateStop)">
+        play_circle_outline
+      </v-icon>
+      <v-icon
+        class="animate-icon"
+        v-if="!animateStop && openVector"
+        @click="animate(animateStop)">
+        pause_circle_outline
+      </v-icon>
+      <vue-slider
         class="time-slider"
         ref="slider"
         v-model="sliderValue"
@@ -134,7 +163,7 @@
     </div>
 
     <!--RASTER range slider-->
-    <div class="range-container">
+    <div class="range-container" v-bind:class="{ hidden: !openRaster }">
       <v-icon
         class="animate-icon"
         v-if="animateStop && openRaster"
@@ -148,7 +177,6 @@
         pause_circle_outline
       </v-icon>
       <vue-slider
-        v-bind:class="{ hidden: !openRaster }"
         class="time-slider"
         v-bind="rasterSliderOptions"
         v-model="rasterSliderValue"
@@ -382,13 +410,12 @@
         } else {
           this.initializeRasterSlider(value)
           this.rasterGroupLayers = value.layers
-          this.openRaster = true
           this.getNewRaster()
         }
       },
       // contain currently selected layer
       layerModel (model) {
-        if (!model.visible) {
+        if (model && !model.visible) {
           this.setModelVisibility(model, true)
         }
       },
@@ -459,13 +486,10 @@
     },
 
     created () {
-      console.log('PROJECT', this.$project)
       // add "select all layers" into layer select
       this.addLayersIntoDropdown()
 
       // disable map cashing
-//      console.log('PROJECT', this.$project)
-//      console.log('OWS', this.$project.ows_url)
       const map = this.$map
       if (!(map.overlay instanceof ImageLayer)) {
         // create and switch to WMS layer
@@ -551,6 +575,7 @@
       },
 
       initializeRasterSlider (group) {
+        this.openRaster = true
         const layersTimeValues = this.getRasterSliderRange(group)
         this.rasterSliderOptions.data = layersTimeValues
         this.rasterSliderOptions.max = Math.max.apply(null, layersTimeValues)
@@ -699,6 +724,8 @@
 
       // in case that one layer is selected twice
       resetAttribute () {
+        this.openVector = false
+        this.openRaster = false
         this.animateStop = true
         this.animationSettings = false
         this.stickySlide = false
@@ -708,7 +735,6 @@
         this.setTimeStep = null
         if (this.timeData && this.timeData.selectAllLayers) {
           this.attribute = null
-          this.openVector = false
           this.attributesSelection = []
           this.checkMultipleAttributes()
           if (this.attributesSelection.length === 1) {
@@ -949,6 +975,8 @@
 
   .hidden {
     visibility: hidden;
+    height: 0;
+    padding: 0 !important;
   }
 
   /*step select*/
