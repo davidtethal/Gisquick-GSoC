@@ -102,36 +102,6 @@
       ></v-text-field>
     </div>
 
-    <!--VECTOR double range slider-->
-    <!--<div class="range-container"
-         v-if="!openRaster">
-      &lt;!&ndash;v-bind:class="{ hidden: !openVector }"&ndash;&gt;
-      <v-icon
-        class="animate-icon"
-        v-if="animateStop && openVector"
-        @click="animate(animateStop)">
-        play_circle_outline
-      </v-icon>
-      <v-icon
-        class="animate-icon"
-        v-if="!animateStop && openVector"
-        @click="animate(animateStop)">
-        pause_circle_outline
-      </v-icon>
-      <vue-slider
-        class="time-slider"
-        ref="slider"
-        v-model="sliderValue"
-        v-bind="sliderOptions"
-        @drag-end="getNewVector()">
-      </vue-slider>
-      <v-icon
-        v-if="openVector"
-        class="animate-icon"
-        @click="animationSettings = !animationSettings">
-        settings
-      </v-icon>
-    </div>-->
     <div class="range-container"
          v-if="!openRaster"
          v-bind:class="{ hidden: !openVector }">
@@ -410,7 +380,7 @@
         } else {
           this.initializeRasterSlider(value)
           this.rasterGroupLayers = value.layers
-          this.getNewRaster()
+//          this.getNewRaster()
         }
       },
       // contain currently selected layer
@@ -583,8 +553,22 @@
         this.rasterSliderValue = this.rasterSliderOptions.min
       },
 
+      setGroupVisibility (model, visible) {
+        this.$overlays.tree.forEach(group => {
+          if (group.isGroup) {
+            const index = group.layers.indexOf(model)
+            if (index !== -1) {
+              console.log('NAME', group.name, visible)
+//              console.log(group)
+              return true
+            }
+          }
+        })
+      },
+
       // set selected layer visible
       setModelVisibility (model, visible) {
+        this.setGroupVisibility(model, visible)
         const visibleLayers = this.$overlays.list.filter(l => l.visible)
         if (!model.selectAllLayers) {
           visibleLayers.push(model)
@@ -637,7 +621,9 @@
           if (parseInt(l.time_stamp) === this.rasterSliderValue) {
             model = l
           }
-          this.setModelVisibility(l, false)
+          if (l.visible) {
+            this.setModelVisibility(l, false)
+          }
         })
         this.setModelVisibility(model, true)
         const layersArray = this.layer.getSource().getVisibleLayers()
@@ -649,7 +635,6 @@
             opacity += `250, `
           }
         }
-        console.log(opacity)
         this.layer.getSource().updateParams({'OPACITIES': opacity})
       },
 
