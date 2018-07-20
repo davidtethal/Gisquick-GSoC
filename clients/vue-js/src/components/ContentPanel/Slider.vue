@@ -558,8 +558,7 @@
           if (group.isGroup) {
             const index = group.layers.indexOf(model)
             if (index !== -1) {
-              console.log('NAME', group.name, visible)
-//              console.log(group)
+              group.visible = visible
               return true
             }
           }
@@ -621,7 +620,7 @@
           if (parseInt(l.time_stamp) === this.rasterSliderValue) {
             model = l
           }
-          if (l.visible) {
+          if (l.visible || l._visible) {
             this.setModelVisibility(l, false)
           }
         })
