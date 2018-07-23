@@ -28,6 +28,8 @@ import Identification from './Identification'
 import Measure from './measure/Measure'
 import Slider from './ContentPanel/Slider'
 import Print from './print/Print'
+import SpatioTemporalTool from './spatio-temporal-tool/SpatioTemporalTool'
+
 
 export default {
   inject: ['$map', '$project'],
@@ -40,14 +42,7 @@ export default {
       Measure,
       Print
     ]
-    for (let i = 0; i < this.$project.layers.length; i++) {
-      if ((this.$project.layers[i].time_values &&
-          this.$project.layers[i].time_values.length > 0) ||
-          this.$project.layers[i].spatio_temporal) {
-        this.tools.push(Slider)
-        break
-      }
-    }
+    this.addSpatioTemporalTool()
   },
   methods: {
     activate (tool) {
@@ -57,6 +52,17 @@ export default {
         this.$root.$panel.setPanel(tool)
       }
       this.activeTool = tool
+    },
+    addSpatioTemporalTool () {
+      for (let i = 0; i < this.$project.layers.length; i++) {
+        if ((this.$project.layers[i].time_values &&
+            this.$project.layers[i].time_values.length > 0) ||
+          this.$project.layers[i].spatio_temporal) {
+          this.tools.push(SpatioTemporalTool)
+//        this.tools.push(Slider)
+          break
+        }
+      }
     }
   }
 }
