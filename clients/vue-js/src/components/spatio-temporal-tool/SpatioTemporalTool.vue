@@ -5,7 +5,6 @@
       label="Select Time Layer"
       :items="layersSelection"
       v-model="timeData"
-      @change="resetAttribute"
     />
     <!--attributes drop box-->
     <v-select
@@ -39,6 +38,7 @@
       :fixed="slider.fixed"
       :step="slider.step"
       v-model="slider.timeRange"
+      @drag-end="updateVectorLayer"
       hide-details
     />
     <v-slider
@@ -60,9 +60,10 @@
 
 <script>
 import moment from 'moment'
+import ImageLayer from 'ol/layer/image'
 import TimeField from './TimeField'
 import RangeSlider from './RangeSlider1'
-import { layersList } from '../../map-builder' //  WebgisImageWMS,
+import { WebgisImageWMS, layersList } from '../../map-builder'
 // import './RangeSlider3' // gobally registred 'f-range-slider'
 import { initializeSlider, getSliderRange, setRangeSliderValues } from './initializeSlider'
 
@@ -113,7 +114,8 @@ export default {
 
   computed: {
     layerModel () {
-      if (this.timeData && this.timeData.selectAllLayers) {
+      console.log('TIME DATA', this.timeData)
+      if (this.timeData && this.timeData.type === 'multiple') {
         return this.layersSelection[0].value
       } else if (this.timeData) {
         return this.layers.find(l => l.name === this.timeData.name)
@@ -144,6 +146,7 @@ export default {
         this.attributesSelection = sliderModel
       } else {
         this.slider = sliderModel
+        this.updateVectorLayer()
       }
     },
     // triggers after attribute is selected
@@ -159,6 +162,7 @@ export default {
         }
         const sliderRange = getSliderRange(visibleLayers)
         this.slider = setRangeSliderValues(sliderRange[0], sliderRange[1], this.layerModel)
+        this.updateVectorLayer()
 //        this.openVector = true
       }
     }
@@ -170,6 +174,36 @@ export default {
 
   created () {
     this.addLayersIntoDropdown()
+
+    // disable map cashing
+    const map = this.$map
+    if (!(map.overlay instanceof ImageLayer)) {
+      // create and switch to WMS layer
+      this.originalLayer = map.overlay
+      this.originalLayer.setVisible(false)
+
+      this.layer = new ImageLayer({
+        visible: true,
+        extent: this.$project.project_extent,
+        source: new WebgisImageWMS({
+          resolutions: this.$project.tile_resolutions,
+          url: this.$project.ows_url,
+          visibleLayers: this.originalLayer.getSource().getVisibleLayers(),
+          layersAttributions: {},
+          params: {
+            'FORMAT': 'image/png'
+          },
+          serverType: 'qgis',
+          ratio: 1
+        })
+      })
+
+      // set as new main map's layer
+      map.addLayer(this.layer)
+      map.overlay = this.layer
+    } else {
+      this.layer = map.overlay
+    }
   },
   methods: {
     // add vector layers into selection
@@ -196,7 +230,88 @@ export default {
         this.layersSelection.unshift(all)
       }
     },
-    resetAttribute () {
+    updateVectorLayer () {
+      console.log('MODEL', this.layerModel)
+      console.log('UPRDATE SINGLE LAYER')
+      console.log(this.timeData)
+      console.log(this.slider)
+
+      let filter = ''
+
+      if (this.layerModel.type === 'multiple') {
+        const attribute = this.attribute || this.attributesSelection[0]
+        const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
+
+        for (let i = 0; i < visibleLayers.length; i++) {
+          if (visibleLayers[i].original_time_attribute === attribute || attribute === 'All attributes') {
+            const modelFilter = this.createFilterString(visibleLayers[i], this.slider)
+            filter += modelFilter
+//
+            visibleLayers[i].title = `${visibleLayers[i].name}-${moment(this.unix1 * 1000).format(this.outputDateMask)}`
+            visibleLayers[i].unix1 = this.unix1
+            visibleLayers[i].unix2 = this.unix2
+            visibleLayers[i].timeFilter = modelFilter
+          } else {
+            filter += `;${visibleLayers[i].timeFilter}`
+          }
+        }
+//
+        this.oldPickerTime1 = moment(this.unix1 * 1000).format('HH:mm')
+        this.oldPickerTime2 = moment(this.unix2 * 1000).format('HH:mm')
+//
+      } else {
+        const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
+        const modelFilter = this.createFilterString(this.timeData, this.slider)
+        filter = `${modelFilter}${otherLayerFilter}`
+//
+        this.layerModel.title = `${this.timeData.name}-${moment(this.slider.timeRange[0] * 1000).format(this.outputDateMask)}`
+        this.layerModel.unix1 = this.slider.timeRange[0]
+        this.layerModel.unix2 = this.slider.timeRange[1]
+        this.layerModel.timeFilter = modelFilter
+//
+        this.oldPickerTime1 = moment(this.slider.timeRange[0] * 1000).format('HH:mm')
+        this.oldPickerTime2 = moment(this.slider.timeRange[1] * 1000).format('HH:mm')
+//
+      }
+      console.log('FILTER', filter)
+      this.layer.getSource().updateParams({'FILTER': filter})
+    },
+
+    createFilterString (timeData, slider) {
+      let filter = ''
+      if (timeData.unix) {
+        filter = this.createLayerFilterString(
+          timeData.name,
+          timeData.time_attribute,
+          slider.timeRange[0],
+          slider.timeRange[1])
+      } else {
+        const dateTimeUnix1 = moment(slider.timeRange[0] * 1000).format(timeData.input_datetime_mask)
+        const dateTimeUnix2 = moment(slider.timeRange[1] * 1000).format(timeData.input_datetime_mask)
+        filter = this.createLayerFilterString(
+          timeData.name,
+          timeData.original_time_attribute,
+          dateTimeUnix1,
+          dateTimeUnix2)
+      }
+      return filter
+    },
+
+    createLayerFilterString (layerName, attribute, min, max) {
+      const filterString = `;${layerName}:"${attribute}" >= '${min}' AND "${attribute}" <= '${max}'`
+      return filterString
+    },
+
+    // make filter for non selected time layers
+    getFilterFromLayers (layers, layerModel) {
+      const modelIndex = layers.indexOf(layerModel)
+      let filter = ''
+      for (let i = 0; i < layers.length; i++) {
+        if (layers[i].timeFilter && i !== modelIndex) {
+          filter += `;${layers[i].timeFilter}`
+        }
+      }
+      return filter
     }
   }
 }
