@@ -16,40 +16,43 @@
     />
 
     <time-field
-      :min="range.min"
-      :max="range.max"
-      v-model="time[0]"
+      :min="slider.range.min"
+      :max="slider.range.max"
+      v-model="slider.timeRange[0]"
       mask="YYYY-MM-DD"
       label="From"
     />
 
     <time-field
-      :min="time[0]"
-      :max="range.max"
-      v-model="time[1]"
+      v-if="slider.timeRange[1]"
+      :min="slider.timeRange[0]"
+      :max="slider.range.max"
+      v-model="slider.timeRange[1]"
       mask="YYYY-MM-DD"
       label="To"
     />
 
      <range-slider
-      :min="range.min"
-      :max="range.max"
-      :fixed="fixed"
-      v-model="time"
+       v-if="slider.timeRange[1]"
+      :min="slider.range.min"
+      :max="slider.range.max"
+      :fixed="slider.fixed"
+      :step="slider.step"
+      v-model="slider.timeRange"
       hide-details
     />
-   <!-- <f-range-slider
-      :min="range.min"
-      :max="range.max"
-      v-model="time"
-      :fixed="fixed"
-      class="mx-2"
-      hide-details
-    />-->
+    <v-slider
+      v-if="slider.timeRange[1] === null"
+      :min="slider.range.min"
+      :max="slider.range.max"
+      :step="slider.step"
+      v-model="slider.timeRange[0]"
+    />
+
     <v-checkbox
       color="primary"
       label="Fixed range"
-      v-model="fixed"
+      v-model="slider.fixed"
       hide-details
     />
   </div>
@@ -61,6 +64,8 @@ import TimeField from './TimeField'
 import RangeSlider from './RangeSlider1'
 import { layersList } from '../../map-builder' //  WebgisImageWMS,
 // import './RangeSlider3' // gobally registred 'f-range-slider'
+import { initializeSlider } from './utils'
+
 
 function unixTime (time) {
   return moment(time, 'YYYY-MM-DD').unix()
@@ -74,15 +79,22 @@ export default {
 
   data () {
     return state || {
-      fixed: false,
-      range: {
-        min: unixTime('2018-06-03'),
-        max: unixTime('2018-08-05')
+
+      // slider
+      slider: {
+        fixed: false,
+        range: {
+          min: unixTime('2018-06-03'),
+          max: unixTime('2018-08-05')
+        },
+        timeRange: [
+          unixTime('2018-06-15'),
+          unixTime('2018-07-15')
+        ],
+        timeValue: unixTime('2018-06-15'),
+        step: 100
       },
-      time: [
-        unixTime('2018-06-15'),
-        unixTime('2018-07-15')
-      ],
+
       // selects lists
       layersSelection: [],
       attributesSelection: [],
@@ -93,22 +105,7 @@ export default {
       attribute: null,
 
       openVector: false,
-      openRaster: false,
-
-      // DELETE - testing data
-      sliderMin: null,
-      sliderMax: null,
-      sliderOptions: {
-        max: null
-      },
-      unix1: null,
-      unix2: null,
-      rasterSliderOptions: {
-        data: null,
-        max: null,
-        min: null
-      },
-      raterSliderValue: null
+      openRaster: false
 
     }
   },
@@ -137,7 +134,8 @@ export default {
       this.openVector = false
       this.openRaster = false
 //
-      this.initializeSlider(value)
+      this.slider = initializeSlider(value, this.$overlays, this.layerModel)
+      console.log('SLIDER', this.slider)
     },
     // triggers after attribute is selected
     attribute (value) {
@@ -190,7 +188,9 @@ export default {
       }
     },
     resetAttribute () {
-    },
+    }
+/*
+
     initializeSlider (layer) {
       if (layer.type === 'multiple') {
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
@@ -223,35 +223,35 @@ export default {
       }
     },
     setSliderValues (timeValueArray) {
+      this.range.min = Math.min.apply(null, timeValueArray)
+      this.range.max = Math.max.apply(null, timeValueArray)
+      this.timeValue = this.range.min
       this.rasterSliderOptions.data = timeValueArray
-      this.rasterSliderOptions.max = Math.max.apply(null, timeValueArray)
-      this.rasterSliderOptions.min = Math.min.apply(null, timeValueArray)
-      this.rasterSliderValue = this.rasterSliderOptions.min
 //      console.log(this.rasterSliderOptions.data)
 //      console.log(this.rasterSliderOptions.max)
 //      console.log(this.rasterSliderOptions.min)
 //      console.log(this.rasterSliderValue)
     },
     setRangeSliderValues (min, max) {
-      this.sliderMin = min
-      this.sliderMax = max
+      this.range.min = min
+      this.range.max = max
       this.sliderOptions.max = max - min
       this.step = (max - min) / 100
       if (this.layerModel && this.layerModel.unix1) {
-        this.unix1 = this.layerModel.unix1
+        this.timeRange[0] = this.layerModel.unix1
       } else {
-        this.unix1 = min
+        this.timeRange[0] = min
       }
       if (this.layerModel && this.layerModel.unix2) {
-        this.unix2 = this.layerModel.unix2
+        this.timeRange[1] = this.layerModel.unix2
       } else {
-        this.unix2 = max + this.step
+        this.timeRange[1] = min + this.step
       }
-//      console.log(this.sliderMin)
-//      console.log(this.sliderMax)
-//      console.log(this.step)
-//      console.log(this.unix1)
-//      console.log(this.unix2)
+      console.log(this.range.min)
+      console.log(this.range.max)
+      console.log(this.step)
+      console.log(this.timeRange[0])
+      console.log(this.timeRange[1])
     },
     // find unique attributes
     hasMultipleAttributes (visibleLayers) {
@@ -284,6 +284,7 @@ export default {
       rasterGroupTimeValues.sort(function (a, b) { return a - b })
       return rasterGroupTimeValues
     }
+*/
   }
 }
 </script>
