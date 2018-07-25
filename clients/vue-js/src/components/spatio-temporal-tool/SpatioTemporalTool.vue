@@ -5,7 +5,6 @@
       label="Select Time Layer"
       :items="layersSelection"
       v-model="timeData"
-      item-text="name"
       @change="resetAttribute"
     />
     <!--attributes drop box-->
@@ -60,7 +59,7 @@
 import moment from 'moment'
 import TimeField from './TimeField'
 import RangeSlider from './RangeSlider1'
-import { WebgisImageWMS, layersList } from '../../map-builder'
+import { layersList } from '../../map-builder' //  WebgisImageWMS,
 // import './RangeSlider3' // gobally registred 'f-range-slider'
 
 function unixTime (time) {
@@ -117,7 +116,7 @@ export default {
   computed: {
     layerModel () {
       if (this.timeData && this.timeData.selectAllLayers) {
-        return this.layersSelection[0]
+        return this.layersSelection[0].value
       } else if (this.timeData) {
         return this.layers.find(l => l.name === this.timeData.name)
       }
@@ -125,13 +124,19 @@ export default {
   },
 
   watch: {
+    // contain currently selected layer
+    layerModel (model) {
+//      if (model && !model.visible) {
+//        this.setModelVisibility(model, true)
+//      }
+    },
     // triggers after time layer is selected
-    timeData(value) {
+    timeData (value) {
       this.attribute = null
       this.attributesSelection = []
       this.openVector = false
       this.openRaster = false
-
+//
       this.initializeSlider(value)
     },
     // triggers after attribute is selected
@@ -149,7 +154,7 @@ export default {
         this.setRangeSliderValues(sliderRange[0], sliderRange[1])
         this.openVector = true
       }
-    },
+    }
   },
 
   beforeDestroy () {
@@ -159,21 +164,25 @@ export default {
   created () {
     this.addLayersIntoDropdown()
   },
-  methods : {
+  methods: {
     // add vector layers into selection
     addLayersIntoDropdown () {
       let containVector = false
       const all = {
-        name: 'All visible layers',
-        title: 'All visible layers',
-        type: 'multiple'
+        text: 'All visible layers',
+        value: {
+          name: 'All visible layers',
+          title: 'All visible layers',
+          type: 'multiple'
+        }
       }
       this.$project.layers.forEach(l => {
         if (l.time_values && l.time_values.length > 0) {
           containVector = true
         }
         if ((l.time_values && l.time_values.length > 0) || l.spatio_temporal) {
-          this.layersSelection.push(l)
+          const item = { text: l.name, value: l }
+          this.layersSelection.push(item)
         }
       })
       if (containVector) {
@@ -182,38 +191,38 @@ export default {
     },
     resetAttribute () {
     },
-    initializeSlider (value) {
-      if (value.type === 'multiple') {
+    initializeSlider (layer) {
+      if (layer.type === 'multiple') {
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
-
+//
         if (!this.hasMultipleAttributes(visibleLayers)) {
-
+//
 //          this.setDateMask(visibleLayers)
 //          this.maskIncludeDate(this.outputDateMask)
 //          this.hasTime = this.outputDateMask.includes('HH:mm')
-
+//
           const sliderRange = this.getSliderRange(visibleLayers)
           this.setRangeSliderValues(sliderRange[0], sliderRange[1])
           this.openVector = true
         }
-      } else if (value.type === 'vector') {
-
+      } else if (layer.type === 'vector') {
+//
 //        this.outputDateMask = value.output_datetime_mask
 //        this.maskIncludeDate(this.outputDateMask)
 //        this.hasTime = this.outputDateMask.includes('HH:mm')
-
-        this.setRangeSliderValues(this.timeData.time_values[0], this.timeData.time_values[1])
+//
+        this.setRangeSliderValues(layer.time_values[0], layer.time_values[1])
         this.openVector = true
-
+//
 //        this.updateSingleLayer()
-
-      } else if (value.isGroup) {
-        this.setSliderValues(this.getRasterGroupTimeValues(value))
-        this.rasterGroupLayers = value.layers
+//
+      } else if (layer.isGroup) {
+        this.setSliderValues(this.getRasterGroupTimeValues(layer))
+        this.rasterGroupLayers = layer.layers
         this.openRaster = true
       }
     },
-    setSliderValues(timeValueArray) {
+    setSliderValues (timeValueArray) {
       this.rasterSliderOptions.data = timeValueArray
       this.rasterSliderOptions.max = Math.max.apply(null, timeValueArray)
       this.rasterSliderOptions.min = Math.min.apply(null, timeValueArray)
@@ -222,9 +231,8 @@ export default {
 //      console.log(this.rasterSliderOptions.max)
 //      console.log(this.rasterSliderOptions.min)
 //      console.log(this.rasterSliderValue)
-
     },
-    setRangeSliderValues(min, max) {
+    setRangeSliderValues (min, max) {
       this.sliderMin = min
       this.sliderMax = max
       this.sliderOptions.max = max - min
@@ -275,7 +283,7 @@ export default {
       group.layers.forEach(l => { rasterGroupTimeValues.push(parseInt(l.time_stamp)) })
       rasterGroupTimeValues.sort(function (a, b) { return a - b })
       return rasterGroupTimeValues
-    },
+    }
   }
 }
 </script>

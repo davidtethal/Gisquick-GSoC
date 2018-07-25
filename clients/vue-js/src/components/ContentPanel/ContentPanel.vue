@@ -117,51 +117,51 @@
       this.groups.forEach(l => { this.$set(l, 'visible', true) })
       this.overlays.list.forEach(l => { this.$set(l, '_visible', l.visible) })
 
-    const visibleBaseLayer = this.baseLayers.list.find(l => l.visible)
-    if (visibleBaseLayer) {
-      this.visibleBaseLayer = visibleBaseLayer.name
-    }
-    this.updateLayersVisibility()
-  },
-  computed: {
-    groups () {
-      return layersList(this.overlays.tree, false).filter(l => l.isGroup)
-    }
-  },
-  methods: {
-    setTopic (index) {
-      const visibleLayers = this.overlays.topics[index].visible_overlays
-
-      this.overlays.list.forEach(l => { l._visible = visibleLayers.includes(l.name) })
+      const visibleBaseLayer = this.baseLayers.list.find(l => l.visible)
+      if (visibleBaseLayer) {
+        this.visibleBaseLayer = visibleBaseLayer.name
+      }
       this.updateLayersVisibility()
     },
-    updateBaseLayerVisibility (visibleBaseLayer) {
-      this.$map.getLayers().getArray()
-        .filter(l => l.get('type') === 'baselayer')
-        .forEach(l => l.setVisible(l.get('name') === visibleBaseLayer))
+    computed: {
+      groups () {
+        return layersList(this.overlays.tree, false).filter(l => l.isGroup)
+      }
     },
-    updateLayersVisibility () {
-      this.activeTopicIndex = null
+    methods: {
+      setTopic (index) {
+        const visibleLayers = this.overlays.topics[index].visible_overlays
 
-      // layers of hidden groups
-      const excluded = this.groups
-        .filter(l => !l.visible)
-        .reduce((values, layer) => {
-          return values.concat(groupLayers(layer).map(l => l.name))
-        }, [])
+        this.overlays.list.forEach(l => { l._visible = visibleLayers.includes(l.name) })
+        this.updateLayersVisibility()
+      },
+      updateBaseLayerVisibility (visibleBaseLayer) {
+        this.$map.getLayers().getArray()
+          .filter(l => l.get('type') === 'baselayer')
+          .forEach(l => l.setVisible(l.get('name') === visibleBaseLayer))
+      },
+      updateLayersVisibility () {
+        this.activeTopicIndex = null
 
-      this.overlays.list.forEach(l => {
-        l.visible = (l.hidden || l._visible) && !excluded.includes(l.name)
-      })
-      this.visibleLayers = this.overlays.list.filter(l => l.visible)
+        // layers of hidden groups
+        const excluded = this.groups
+          .filter(l => !l.visible)
+          .reduce((values, layer) => {
+            return values.concat(groupLayers(layer).map(l => l.name))
+          }, [])
 
-      this.$map.overlay.getSource().setVisibleLayers(this.visibleLayers.map(l => l.name))
-    },
-    expandItem (group, id) {
-      this.expandedItems[group] = this.expandedItems[group] !== id ? id : ''
+        this.overlays.list.forEach(l => {
+          l.visible = (l.hidden || l._visible) && !excluded.includes(l.name)
+        })
+        this.visibleLayers = this.overlays.list.filter(l => l.visible)
+
+        this.$map.overlay.getSource().setVisibleLayers(this.visibleLayers.map(l => l.name))
+      },
+      expandItem (group, id) {
+        this.expandedItems[group] = this.expandedItems[group] !== id ? id : ''
+      }
     }
   }
-}
 </script>
 
 <style lang="scss">
