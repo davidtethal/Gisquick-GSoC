@@ -117,110 +117,110 @@
       this.groups.forEach(l => { this.$set(l, 'visible', true) })
       this.overlays.list.forEach(l => { this.$set(l, '_visible', l.visible) })
 
-      const visibleBaseLayer = this.baseLayers.list.find(l => l.visible)
-      if (visibleBaseLayer) {
-        this.visibleBaseLayer = visibleBaseLayer.name
-      }
+    const visibleBaseLayer = this.baseLayers.list.find(l => l.visible)
+    if (visibleBaseLayer) {
+      this.visibleBaseLayer = visibleBaseLayer.name
+    }
+    this.updateLayersVisibility()
+  },
+  computed: {
+    groups () {
+      return layersList(this.overlays.tree, false).filter(l => l.isGroup)
+    }
+  },
+  methods: {
+    setTopic (index) {
+      const visibleLayers = this.overlays.topics[index].visible_overlays
+
+      this.overlays.list.forEach(l => { l._visible = visibleLayers.includes(l.name) })
       this.updateLayersVisibility()
     },
-    computed: {
-      groups () {
-        return layersList(this.overlays.tree, false).filter(l => l.isGroup)
-      }
+    updateBaseLayerVisibility (visibleBaseLayer) {
+      this.$map.getLayers().getArray()
+        .filter(l => l.get('type') === 'baselayer')
+        .forEach(l => l.setVisible(l.get('name') === visibleBaseLayer))
     },
-    methods: {
-      setTopic (index) {
-        const visibleLayers = this.overlays.topics[index].visible_overlays
+    updateLayersVisibility () {
+      this.activeTopicIndex = null
 
-        this.overlays.list.forEach(l => { l._visible = visibleLayers.includes(l.name) })
-        this.updateLayersVisibility()
-      },
-      updateBaseLayerVisibility (visibleBaseLayer) {
-        this.$map.getLayers().getArray()
-          .filter(l => l.get('type') === 'baselayer')
-          .forEach(l => l.setVisible(l.get('name') === visibleBaseLayer))
-      },
-      updateLayersVisibility () {
-        this.activeTopicIndex = null
+      // layers of hidden groups
+      const excluded = this.groups
+        .filter(l => !l.visible)
+        .reduce((values, layer) => {
+          return values.concat(groupLayers(layer).map(l => l.name))
+        }, [])
 
-        // layers of hidden groups
-        const excluded = this.groups
-          .filter(l => !l.visible)
-          .reduce((values, layer) => {
-            return values.concat(groupLayers(layer).map(l => l.name))
-          }, [])
+      this.overlays.list.forEach(l => {
+        l.visible = (l.hidden || l._visible) && !excluded.includes(l.name)
+      })
+      this.visibleLayers = this.overlays.list.filter(l => l.visible)
 
-        this.overlays.list.forEach(l => {
-          l.visible = (l.hidden || l._visible) && !excluded.includes(l.name)
-        })
-        this.visibleLayers = this.overlays.list.filter(l => l.visible)
-
-        this.$map.overlay.getSource().setVisibleLayers(this.visibleLayers.map(l => l.name))
-      },
-      expandItem (group, id) {
-        this.expandedItems[group] = this.expandedItems[group] !== id ? id : ''
-      }
+      this.$map.overlay.getSource().setVisibleLayers(this.visibleLayers.map(l => l.name))
+    },
+    expandItem (group, id) {
+      this.expandedItems[group] = this.expandedItems[group] !== id ? id : ''
     }
   }
+}
 </script>
 
 <style lang="scss">
-  @import '../../theme.scss';
+@import '../../theme.scss';
 
-  .content-panel {
-    flex-grow: 1;
+.content-panel {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+
+  .v-input-group {
+    padding-top: 0;
+  }
+
+  /* For proper scrolling */
+  .v-tabs {
+    flex: 1 1;
     display: flex;
     flex-direction: column;
-
-    .input-group {
-      padding-top: 0;
-    }
-
-    /* For proper scrolling */
-    .tabs {
+    .v-tabs__items {
       flex: 1 1;
       display: flex;
       flex-direction: column;
-      .tabs__items {
-        flex: 1 1;
+      .v-tabs__content {
         display: flex;
         flex-direction: column;
-        .tabs__content {
-          display: flex;
-          flex-direction: column;
-          flex: 1 1;
-          overflow-y: auto;
-        }
+        flex: 1 1;
+        overflow-y: auto;
       }
     }
+  }
 
   .secondary-tabs {
-    .tabs__bar {
+    .v-tabs__bar {
       margin: 0 0.25em;
     }
-    .tabs__div {
+    .v-tabs__div {
       &:first-child {
-        .tabs__item {
+        .v-tabs__item {
           border-top-left-radius: 0.5em;
           border-bottom-left-radius: 0.5em;
           border-width: 1px 0 1px 1px;
         }
       }
       &:last-child {
-        .tabs__item {
+        .v-tabs__item {
           border-top-right-radius: 0.5em;
           border-bottom-right-radius: 0.5em;
           border-width: 1px 1px 1px 0;
         }
       }
-      .tabs__item {
+      .v-tabs__item {
         margin: 0.5em 0;
         height: 2.25em;
         text-transform: none;
         font-size: 0.875em;
         border: 1px solid #bbb;
 
-        &.tabs__item--active {
+        &.v-tabs__item--active {
           color: #fff!important;
           background-color: $primary-color;
           font-weight: 600;
@@ -230,11 +230,10 @@
     }
   }
 
-    .legend-container {
-      img {
-        display: block;
-      }
+  .legend-container {
+    img {
+      display: block;
     }
   }
-
+}
 </style>

@@ -1,9 +1,9 @@
 <template>
   <v-layout class="print-preview">
     <div class="preview-bg"></div>
-    <v-layout class="column fit">
+    <v-layout class="column shrink">
       <div class="preview-bg"></div>
-      <v-layout class="column fit">
+      <v-layout class="column shrink">
 
         <v-toolbar dark flat height="30">
           <span flex>Scale 1: {{ scale }}</span>
@@ -57,6 +57,8 @@ export default {
   inject: ['$project', '$map'],
   data: () => ({
     scale: 0,
+    width: 0,
+    height: 0,
     visible: false
   }),
   computed: {
@@ -107,8 +109,8 @@ export default {
       if (this.visible) {
         const layoutWidth = mmToPx(this.layout.width)
         const layoutHeight = mmToPx(this.layout.height)
-        const viewWidth = this.$el.offsetWidth - 40
-        const viewHeight = this.$el.offsetHeight - 40
+        const viewWidth = this.width - 40
+        const viewHeight = this.height - 40
         if (layoutWidth > viewWidth || layoutHeight > viewHeight) {
           const scale = Math.max(layoutWidth / viewWidth, layoutHeight / viewHeight)
           return scale
@@ -123,6 +125,7 @@ export default {
     }
   },
   mounted () {
+    this.updateSize()
     const view = this.$map.getView()
     const updateScale = () => {
       const scale = view.getScale()
@@ -133,12 +136,20 @@ export default {
     updateScale()
     this.listener = view.on('change:resolution', updateScale)
     this.visible = true
+
+    window.addEventListener('resize', this.updateSize)
   },
   beforeDestroy () {
     this.setScale(1)
     Observable.unByKey(this.listener)
+    window.removeEventListener('resize', this.updateSize)
   },
   methods: {
+    updateSize () {
+      console.log('Update Size')
+      this.width = this.$el.offsetWidth
+      this.height = this.$el.offsetHeight
+    },
     setScale (ratio) {
       const map = this.$map
       // const mapEl = this.$map.getViewport()
@@ -227,23 +238,17 @@ export default {
 
 .print-preview {
 
-  .layout {
-    &.fit {
-      flex-grow: 0;
-    }
-  }
-
   pointer-events: none!important;
   .preview-bg {
     background-color: rgba(0,0,0,0.25);
     flex-grow: 1;
   }
 
-  .toolbar {
+  .v-toolbar {
     span {
       font-size: 90%;
       position: absolute;
-      left: 0;
+      left: 0.5em;
     }
     pointer-events: auto;
     h1 {
@@ -251,9 +256,9 @@ export default {
     }
     .controls {
       position: absolute;
-      right: -0.5em;
+      right: 0;
     }
-    .btn {
+    .v-btn {
       margin: 0;
       width: 32px;
       height: 30px;
