@@ -2,6 +2,7 @@
   <v-range-slider
     v-bind="_props"
     @input="handleInput"
+    @click="$emit('click')"
   />
 </template>
 
@@ -30,6 +31,9 @@ export default {
         }
       }
       this.$emit('input', value)
+    },
+    loglog () {
+      console.log('TRIGGER')
     }
   }
 }

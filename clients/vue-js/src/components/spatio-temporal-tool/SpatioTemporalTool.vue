@@ -38,7 +38,7 @@
       :fixed="slider.fixed"
       :step="slider.step"
       v-model="slider.timeRange"
-      @drag-end="updateVectorLayer"
+       @click="updateVectorLayer"
       hide-details
     />
     <v-slider
@@ -114,7 +114,7 @@ export default {
 
   computed: {
     layerModel () {
-      console.log('TIME DATA', this.timeData)
+//      console.log('TIME DATA', this.timeData)
       if (this.timeData && this.timeData.type === 'multiple') {
         return this.layersSelection[0].value
       } else if (this.timeData) {
@@ -231,52 +231,38 @@ export default {
       }
     },
     updateVectorLayer () {
-      console.log('MODEL', this.layerModel)
-      console.log('UPRDATE SINGLE LAYER')
-      console.log(this.timeData)
-      console.log(this.slider)
-
       let filter = ''
-
       if (this.layerModel.type === 'multiple') {
         const attribute = this.attribute || this.attributesSelection[0]
         const visibleLayers = this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
 
         for (let i = 0; i < visibleLayers.length; i++) {
-          if (visibleLayers[i].original_time_attribute === attribute || attribute === 'All attributes') {
-            const modelFilter = this.createFilterString(visibleLayers[i], this.slider)
+          const model = this.layers.find(l => l.name === visibleLayers[i].name)
+
+          if (model.original_time_attribute === attribute || attribute === 'All attributes') {
+            const modelFilter = this.createFilterString(model, this.slider)
             filter += modelFilter
-//
-            visibleLayers[i].title = `${visibleLayers[i].name}-${moment(this.unix1 * 1000).format(this.outputDateMask)}`
-            visibleLayers[i].unix1 = this.unix1
-            visibleLayers[i].unix2 = this.unix2
-            visibleLayers[i].timeFilter = modelFilter
+            this.updateModel(model, this.slider, modelFilter)
           } else {
-            filter += `;${visibleLayers[i].timeFilter}`
+            filter += `;${model.timeFilter}`
           }
         }
 //
-        this.oldPickerTime1 = moment(this.unix1 * 1000).format('HH:mm')
-        this.oldPickerTime2 = moment(this.unix2 * 1000).format('HH:mm')
+//        this.oldPickerTime1 = moment(this.unix1 * 1000).format('HH:mm')
+//        this.oldPickerTime2 = moment(this.unix2 * 1000).format('HH:mm')
 //
       } else {
         const otherLayerFilter = this.getFilterFromLayers(this.layers, this.layerModel)
         const modelFilter = this.createFilterString(this.timeData, this.slider)
         filter = `${modelFilter}${otherLayerFilter}`
+        this.updateModel(this.layerModel, this.slider, modelFilter)
 //
-        this.layerModel.title = `${this.timeData.name}-${moment(this.slider.timeRange[0] * 1000).format(this.outputDateMask)}`
-        this.layerModel.unix1 = this.slider.timeRange[0]
-        this.layerModel.unix2 = this.slider.timeRange[1]
-        this.layerModel.timeFilter = modelFilter
-//
-        this.oldPickerTime1 = moment(this.slider.timeRange[0] * 1000).format('HH:mm')
-        this.oldPickerTime2 = moment(this.slider.timeRange[1] * 1000).format('HH:mm')
+//        this.oldPickerTime1 = moment(this.slider.timeRange[0] * 1000).format('HH:mm')
+//        this.oldPickerTime2 = moment(this.slider.timeRange[1] * 1000).format('HH:mm')
 //
       }
-      console.log('FILTER', filter)
       this.layer.getSource().updateParams({'FILTER': filter})
     },
-
     createFilterString (timeData, slider) {
       let filter = ''
       if (timeData.unix) {
@@ -296,12 +282,10 @@ export default {
       }
       return filter
     },
-
     createLayerFilterString (layerName, attribute, min, max) {
       const filterString = `;${layerName}:"${attribute}" >= '${min}' AND "${attribute}" <= '${max}'`
       return filterString
     },
-
     // make filter for non selected time layers
     getFilterFromLayers (layers, layerModel) {
       const modelIndex = layers.indexOf(layerModel)
@@ -312,7 +296,15 @@ export default {
         }
       }
       return filter
+    },
+    // update layer model params
+    updateModel (model, slider, filter) {
+      model.title = `${model.name}-${moment(slider.timeRange[0] * 1000).format(this.outputDateMask)}`
+      model.unix1 = slider.timeRange[0]
+      model.unix2 = slider.timeRange[1]
+      model.timeFilter = filter
     }
+//
   }
 }
 </script>
