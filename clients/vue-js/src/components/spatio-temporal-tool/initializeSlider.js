@@ -30,6 +30,7 @@ export function initializeSlider (layer, overlays, layerModel) {
 //
       const sliderRange = getSliderRange(visibleLayers)
       slider = setRangeSliderValues(sliderRange[0], sliderRange[1], layerModel)
+      return attributesSelection
       // this.openVector = true
     } else {
       return attributesSelection

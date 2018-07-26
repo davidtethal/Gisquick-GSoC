@@ -128,12 +128,6 @@ export default {
       console.log('VAL', val)
       console.log('OLD VAL', oldVal)
     },
-    // contain currently selected layer
-    layerModel (model) {
-//      if (model && !model.visible) {
-//        this.setModelVisibility(model, true)
-//      }
-    },
     // triggers after time layer is selected
     timeData (value) {
       this.attribute = null
@@ -142,9 +136,12 @@ export default {
       this.openRaster = false
 //
       const sliderModel = initializeSlider(value, this.$overlays, this.layerModel)
-      if (sliderModel.constructor === Array) {
+      if (sliderModel && sliderModel.constructor === Array && sliderModel.length === 1) {
+        this.attribute = sliderModel[0]
+      } else if (sliderModel && sliderModel.constructor === Array) {
         this.attributesSelection = sliderModel
-      } else {
+      } else if (sliderModel) {
+        this.setModelVisibility(this.layerModel, true)
         this.slider = sliderModel
         this.updateVectorLayer()
       }
@@ -163,7 +160,6 @@ export default {
         const sliderRange = getSliderRange(visibleLayers)
         this.slider = setRangeSliderValues(sliderRange[0], sliderRange[1], this.layerModel)
         this.updateVectorLayer()
-//        this.openVector = true
       }
     }
   },
@@ -210,10 +206,10 @@ export default {
     addLayersIntoDropdown () {
       let containVector = false
       const all = {
-        text: 'All visible layers',
+        text: 'All visible vector layers',
         value: {
-          name: 'All visible layers',
-          title: 'All visible layers',
+          name: 'All visible vector layers',
+          title: 'All visible vector layers',
           type: 'multiple'
         }
       }
@@ -230,6 +226,33 @@ export default {
         this.layersSelection.unshift(all)
       }
     },
+    /*
+    LAYERS VISIBILITY
+    */
+    setModelVisibility (model, visible) {
+      this.setGroupVisibility(model, visible)
+      const visibleLayers = this.$overlays.list.filter(l => l.visible)
+      if (!model.selectAllLayers) {
+        visibleLayers.push(model)
+        model._visible = visible
+        model.visible = visible
+      }
+      this.layer.getSource().setVisibleLayers(visibleLayers.map(l => l.name))
+    },
+    setGroupVisibility (model, visible) {
+      this.$overlays.tree.forEach(group => {
+        if (group.isGroup) {
+          const index = group.layers.indexOf(model)
+          if (index !== -1) {
+            group.visible = visible
+            return true
+          }
+        }
+      })
+    },
+    /*
+    VECTOR FILTER
+    */
     updateVectorLayer () {
       let filter = ''
       if (this.layerModel.type === 'multiple') {
