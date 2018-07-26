@@ -65,7 +65,7 @@ import TimeField from './TimeField'
 import RangeSlider from './RangeSlider1'
 import { WebgisImageWMS, layersList } from '../../map-builder'
 // import './RangeSlider3' // gobally registred 'f-range-slider'
-import { initializeSlider, getSliderRange, setRangeSliderValues } from './initializeSlider'
+import { initializeSlider, getSliderRange, setRangeSliderValues, findDateTimeMask} from './initializeSlider'
 
 
 function unixTime (time) {
@@ -94,7 +94,8 @@ export default {
         ],
         step: 100,
         discreteData: [],
-        rasterGroupLayers: []
+        rasterGroupLayers: [],
+        timeData: {}
       },
 
       // selects lists
@@ -125,8 +126,8 @@ export default {
 
   watch: {
     slider (val, oldVal) {
-      console.log('VAL', val)
-      console.log('OLD VAL', oldVal)
+//      console.log('VAL', val)
+//      console.log('OLD VAL', oldVal)
     },
     // triggers after time layer is selected
     timeData (value) {
@@ -159,6 +160,7 @@ export default {
         }
         const sliderRange = getSliderRange(visibleLayers)
         this.slider = setRangeSliderValues(sliderRange[0], sliderRange[1], this.layerModel)
+        this.slider.timeData = findDateTimeMask(visibleLayers)
         this.updateVectorLayer()
       }
     }
@@ -232,7 +234,7 @@ export default {
     setModelVisibility (model, visible) {
       this.setGroupVisibility(model, visible)
       const visibleLayers = this.$overlays.list.filter(l => l.visible)
-      if (!model.selectAllLayers) {
+      if (model && !model.selectAllLayers) {
         visibleLayers.push(model)
         model._visible = visible
         model.visible = visible
@@ -322,7 +324,7 @@ export default {
     },
     // update layer model params
     updateModel (model, slider, filter) {
-      model.title = `${model.name}-${moment(slider.timeRange[0] * 1000).format(this.outputDateMask)}`
+      model.title = `${model.name}-${moment(slider.timeRange[0] * 1000).format(slider.timeData.outputDateTimeMask)}`
       model.unix1 = slider.timeRange[0]
       model.unix2 = slider.timeRange[1]
       model.timeFilter = filter

@@ -16,36 +16,17 @@ export function initializeSlider (layer, overlays, layerModel) {
     ],
     'step': 100,
     'discreteData': [],
-    'rasterGroupLayers': []
+    'rasterGroupLayers': [],
+    'timeData': {}
   }
 
   if (layer.type === 'multiple') {
     const visibleLayers = overlays.list.filter(l => l.visible && l.original_time_attribute)
-//
-    if (!hasMultipleAttributes(visibleLayers)) {
-//
-//          this.setDateMask(visibleLayers)
-//          this.maskIncludeDate(this.outputDateMask)
-//          this.hasTime = this.outputDateMask.includes('HH:mm')
-//
-      const sliderRange = getSliderRange(visibleLayers)
-      slider = setRangeSliderValues(sliderRange[0], sliderRange[1], layerModel)
-      return attributesSelection
-      // this.openVector = true
-    } else {
-      return attributesSelection
-    }
+    hasMultipleAttributes(visibleLayers)
+    return attributesSelection
   } else if (layer.type === 'vector') {
-//
-//        this.outputDateMask = value.output_datetime_mask
-//        this.maskIncludeDate(this.outputDateMask)
-//        this.hasTime = this.outputDateMask.includes('HH:mm')
-//
     slider = setRangeSliderValues(layer.time_values[0], layer.time_values[1], layerModel)
-    // this.openVector = true
-//
-//        this.updateSingleLayer()
-//
+    slider.timeData = findDateTimeMask([layer])
     return slider
   } else if (layer.isGroup) {
     setSliderValues(getRasterGroupTimeValues(layer))
@@ -56,11 +37,8 @@ export function initializeSlider (layer, overlays, layerModel) {
 
   function hasMultipleAttributes (visibleLayers) {
     attributesSelection = [...new Set(visibleLayers.map(l => l.original_time_attribute))]
-    if (attributesSelection.length === 1) {
-      return false
-    } else {
+    if (attributesSelection.length > 1) {
       attributesSelection.unshift('All attributes')
-      return true
     }
   }
 
@@ -88,6 +66,8 @@ export function initializeSlider (layer, overlays, layerModel) {
   // function unixTime (time) {
   //   return moment(time, 'YYYY-MM-DD').unix()
   // }
+  //
+  // find mask in cas of multiple layers
 }
 
 export function getSliderRange (visibleLayers) {
@@ -117,9 +97,9 @@ export function setRangeSliderValues (min, max, layerModel) {
     ],
     'step': 100,
     'discreteData': [],
-    'rasterGroupLayers': []
+    'rasterGroupLayers': [],
+    'timeData': {}
   }
-
   slider.range.min = min
   slider.range.max = max
   // slider.sliderOptions.max = max - min
@@ -134,14 +114,34 @@ export function setRangeSliderValues (min, max, layerModel) {
   } else {
     slider.timeRange[1] = min + slider.step
   }
-
   // console.log(slider.range.min)
   // console.log(slider.range.max)
   // console.log(slider.step)
   // console.log(slider.timeRange[0])
   // console.log(slider.timeRange[1])
-
   return slider
-
-
 }
+
+export function findDateTimeMask (visibleLayers) {
+  for (let i = 0; i < visibleLayers.length; i++) {
+    if (visibleLayers[i].output_datetime_mask.includes('HH:mm') && visibleLayers[i].output_datetime_mask.includes('YYYY')) {
+      return {
+        'outputDateTimeMask': visibleLayers[i].output_datetime_mask,
+        'hasDate': true,
+        'hasTime': true}
+    }
+  }
+  for (let i = 0; i < visibleLayers.length; i++) {
+    if (visibleLayers[i].output_datetime_mask.includes('YYYY')) {
+      return {
+        'outputDateTimeMask': visibleLayers[i].output_datetime_mask,
+        'hasDate': true,
+        'hasTime': false}
+    }
+  }
+  return {
+    'outputDateTimeMask': visibleLayers[0].output_datetime_mask,
+    'hasDate': false,
+    'hasTime': true}
+}
+
