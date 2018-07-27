@@ -1,5 +1,6 @@
 <template>
   <v-menu
+    ref="open"
     v-model="open"
     lazy
     offset-y
@@ -7,6 +8,7 @@
     min-width="290px"
     transition="scale-transition"
     :close-on-content-click="false"
+    :return-value.sync="pickedDate"
   >
     <v-text-field
       slot="activator"
@@ -35,6 +37,7 @@
       </v-btn>
     </v-date-picker>
   </v-menu>
+
 </template>
 
 <script>
@@ -78,13 +81,17 @@ export default {
       return moment.unix(this.value)
     },
     outputFormat () {
-      return this.moment.format(this.mask)
+      if (!this.pickedDate) {
+        return moment(this.value * 1000).format(this.mask)
+      } else {
+        return this.pickedDate
+      }
     }
   },
   watch: {
     open (value) {
       if (value) {
-        this.pickedDate = this.moment.toISOString()
+        this.pickedDate = moment(this.value * 1000).format('YYYY-MM-DD')
       }
     }
   },
