@@ -84,7 +84,7 @@ export default {
       if (!this.pickedDate) {
         return moment(this.value * 1000).format(this.mask)
       } else {
-        return this.pickedDate
+        return moment(this.pickedDate, 'YYYY-MM-DD').format(this.mask)
       }
     }
   },
@@ -100,7 +100,7 @@ export default {
       this.open = false
     },
     update () {
-      const date = moment(this.pickedDate, this.mask)
+      const date = moment(this.pickedDate, 'YYYY-MM-DD')
       this.$emit('input', date.unix())
       this.close()
     }
