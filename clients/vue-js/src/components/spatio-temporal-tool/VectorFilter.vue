@@ -56,7 +56,7 @@ export default {
   data () {
     return lastState || {
       step: 100,
-      attribute: null,
+      attribute: 'All attributes',
       fixedRange: false,
       timeRange: [Number.MIN_VALUE, Number.MAX_VALUE]
     }
@@ -85,14 +85,13 @@ export default {
     },
     filter () {
       const filters = []
-      const attribute = this.attribute || this.allAttributes[0]
-      console.log(this.input)
-      if (attribute) {
+      if (this.attribute) {
         this.visibleLayers
           .filter(layer => layer.visible)
           .forEach(layer => {
             let layerFilter = ''
-            if (this.selectedLayers.includes(layer)) {
+            if (this.selectedLayers.includes(layer) &&
+               (this.attribute === 'All attributes' || layer.original_time_attribute === this.attribute)) {
               layerFilter = this.createFilterString(layer, ...this.timeRange)
               layer.timeFilter = layerFilter
               layer.timeMin = this.timeRange[0]
@@ -107,10 +106,17 @@ export default {
     }
   },
   watch: {
+    input: {
+      immediate: true,
+      handler () {
+        if (this.allAttributes.length <= 1) {
+          this.attribute = 'All attributes'
+        }
+      }
+    },
     range: {
       immediate: true,
       handler (range) {
-        console.log(this.timeRange[0])
         if (this.selectedLayers.length === 1 && this.selectedLayers[0].timeMin) {
           this.$set(this.timeRange, 0, this.selectedLayers[0].timeMin)
           this.$set(this.timeRange, 1, this.selectedLayers[0].timeMax)
