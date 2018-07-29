@@ -11,6 +11,7 @@
     <vector-filter
       v-if="selection && selection.type === 'vector'"
       :input="selection.value"
+      :layer="this.layer"
     />
 
     <!--     <raster-filter

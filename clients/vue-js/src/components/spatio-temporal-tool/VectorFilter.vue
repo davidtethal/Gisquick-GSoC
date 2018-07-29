@@ -2,6 +2,7 @@
   <div>
     <!--attributes drop box-->
     <v-select
+      v-bind="_props"
       v-if="allAttributes.length > 1"
       label="Select Attribute"
       :items="attributesOptions"
@@ -52,7 +53,7 @@ let lastState
 export default {
   components: { TimeField, RangeSlider },
   inject: ['$map', '$overlays'],
-  props: ['input'],
+  props: ['input', 'layer'],
   data () {
     return lastState || {
       step: 100,
@@ -69,7 +70,9 @@ export default {
       return Array.isArray(this.input) ? this.input : [this.input]
     },
     allAttributes () {
-      return [...new Set(this.selectedLayers.map(l => l.original_time_attribute))]
+      return [...new Set(this.selectedLayers
+        .filter(l => l.visible)
+        .map(l => l.visible && l.original_time_attribute))]
     },
     attributesOptions () {
       if (this.allAttributes.length > 1) {
@@ -111,6 +114,9 @@ export default {
       handler () {
         if (this.allAttributes.length <= 1) {
           this.attribute = 'All attributes'
+        }
+        if (this.selectedLayers.length === 1 && this.selectedLayers[0].visible === false) {
+          this.setLayerVisibility(this.selectedLayers[0], true)
         }
       }
     },
@@ -154,6 +160,14 @@ export default {
     },
     createLayerFilterString (layerName, attribute, min, max) {
       return `${layerName}:"${attribute}" >= '${min}' AND "${attribute}" <= '${max}'`
+    },
+    setLayerVisibility (layer, visible) {
+      if (layer) {
+        this.visibleLayers.push(layer)
+        layer._visible = visible
+        layer.visible = visible
+      }
+      this.layer.getSource().setVisibleLayers(this.visibleLayers.map(l => l.name))
     }
   }
 }
