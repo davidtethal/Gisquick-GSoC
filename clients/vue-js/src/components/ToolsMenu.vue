@@ -28,7 +28,7 @@ import Identification from './Identification'
 import Measure from './measure/Measure'
 // import Slider from './ContentPanel/Slider'
 import Print from './print/Print'
-import SpatioTemporalTool from './spatio-temporal-tool-old/SpatioTemporalTool'
+import SpatioTemporalTool from './spatio-temporal-tool/SpatioTemporalTool'
 
 
 export default {
