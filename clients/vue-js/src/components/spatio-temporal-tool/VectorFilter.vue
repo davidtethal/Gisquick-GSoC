@@ -13,14 +13,14 @@
       :min="range.min"
       :max="range.max"
       v-model="timeRange[0]"
-      mask="DD-MM-YYYY"
+      :mask="dateMask"
       label="From"
     />
     <time-field
       :min="timeRange[0]"
       :max="range.max"
       v-model="timeRange[1]"
-      mask="YYYY-MM-DD"
+      :mask="dateMask"
       label="To"
     />
     <range-slider
@@ -63,6 +63,13 @@ export default {
     }
   },
   computed: {
+    dateMask () {
+      if (this.selectedLayers.length === 1) {
+        return this.selectedLayers[0].output_datetime_mask
+      } else {
+        return this.getDateTimeMask(this.visibleLayers)
+      }
+    },
     visibleLayers () {
       return this.$overlays.list.filter(l => l.visible && l.original_time_attribute)
     },
@@ -90,7 +97,7 @@ export default {
       const filters = []
       if (this.attribute) {
         this.visibleLayers
-          .filter(layer => layer.visible)
+//          .filter(layer => layer.visible)
           .forEach(layer => {
             let layerFilter = ''
             if (this.selectedLayers.includes(layer) &&
@@ -109,7 +116,7 @@ export default {
     }
   },
   watch: {
-    input: {
+    selectedLayers: {
       immediate: true,
       handler () {
         if (this.allAttributes.length <= 1) {
@@ -168,6 +175,22 @@ export default {
         layer.visible = visible
       }
       this.layer.getSource().setVisibleLayers(this.visibleLayers.map(l => l.name))
+    },
+    getDateTimeMask (layers) {
+      for (let i = 0; i < layers.length; i++) {
+        if (layers[i].output_datetime_mask.includes('HH:mm') &&
+           layers[i].output_datetime_mask.includes('YYYY') &&
+           (this.attribute === 'All attributes' || layers[i].original_time_attribute === this.attribute)) {
+          return layers[i].output_datetime_mask
+        }
+      }
+      for (let i = 0; i < layers.length; i++) {
+        if (layers[i].output_datetime_mask.includes('YYYY') &&
+           (this.attribute === 'All attributes' || layers[i].original_time_attribute === this.attribute)) {
+          return layers[i].output_datetime_mask
+        }
+      }
+      return layers[0].output_datetime_mask
     }
   }
 }
