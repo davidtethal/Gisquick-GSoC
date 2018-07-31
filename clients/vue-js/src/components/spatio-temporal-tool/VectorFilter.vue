@@ -70,7 +70,6 @@
           color="primary"
           hide-details
         />
-        <!--label="Fixed range"-->
       </div>
       <div class="animate-row">
         <p>cumulative</p>
@@ -80,7 +79,6 @@
           color="primary"
           hide-details
         />
-        <!--v-model="cumulatively"-->
       </div>
       <div class="animate-row">
         <p>speed</p>
@@ -90,15 +88,14 @@
                   min="0"
                   max="4"
         ></v-slider>
-        <!--thumbLabel="false"-->
       </div>
       <div class="animate-row">
         <p>step</p>
         <v-text-field
           class="step-text ml-20"
           v-model="animationStepValue"
-        >
-        </v-text-field>
+          mask="##"
+        ></v-text-field>
         <v-select
           class="step-select"
           v-model="animationStep"
@@ -354,7 +351,7 @@ export default {
     overflow: inherit;
   }
 
-  .step-text > div > input {
+  .step-text > div > div > div > input {
     text-align: center;
   }
 

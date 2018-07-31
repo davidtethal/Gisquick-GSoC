@@ -8,7 +8,7 @@
     min-width="290px"
     transition="scale-transition"
     :close-on-content-click="false"
-    :return-value.sync="pickedDate"
+    :return-value.sync="pickedDateTime[0]"
   >
     <v-text-field
       slot="activator"
@@ -18,22 +18,32 @@
       readonly
     />
     <v-date-picker
-      no-title
-      scrollable
+      :class="{ 'hide-child': !includeDate }"
+      v-model="pickedDateTime[0]"
       :min="minDate"
       :max="maxDate"
-      v-model="pickedDate"
+      scrollable
+      no-title
     >
+      <v-spacer></v-spacer>
+      <v-time-picker
+        class="time-picker"
+        v-model="pickedDateTime[1]"
+        v-if="includeTime"
+        format="24hr"
+        no-title
+      ></v-time-picker>
       <v-spacer/>
       <v-btn
+        @click="close"
         flat
-        color="primary"
-        @click="close">Cancel
+        color="primary">Cancel
       </v-btn>
       <v-btn
+        class="right"
+        @click="update"
         flat
-        color="primary"
-        @click="update">OK
+        color="primary">OK
       </v-btn>
     </v-date-picker>
   </v-menu>
@@ -63,10 +73,22 @@ export default {
   data () {
     return {
       open: false,
-      pickedDate: null
+      pickedDateTime: []
     }
   },
   computed: {
+    includeDate () {
+      if (this.mask.includes('YYYY') || this.mask.includes('MM') || this.mask.includes('DD')) {
+        return true
+      }
+      return false
+    },
+    includeTime () {
+      if (this.mask.includes('HH:mm') || this.mask.includes('HH') || this.mask.includes('mm')) {
+        return true
+      }
+      return false
+    },
     minDate () {
       if (Number.isInteger(this.min)) {
         return moment.unix(this.min).toISOString()
@@ -81,17 +103,18 @@ export default {
       return moment.unix(this.value)
     },
     outputFormat () {
-      if (!this.pickedDate) {
+      if (!this.pickedDateTime[0]) {
         return moment(this.value * 1000).format(this.mask)
       } else {
-        return moment(this.pickedDate, 'YYYY-MM-DD').format(this.mask)
+        const dateTime = `${this.pickedDateTime[0]} ${this.pickedDateTime[1]}`
+        return moment(dateTime, 'YYYY-MM-DD HH:mm').format(this.mask)
       }
     }
   },
   watch: {
     open (value) {
       if (value) {
-        this.pickedDate = moment(this.value * 1000).format('YYYY-MM-DD')
+        this.pickedDateTime = moment((this.value * 1000)).format('YYYY-MM-DD HH:mm').split(' ')
       }
     }
   },
@@ -100,10 +123,38 @@ export default {
       this.open = false
     },
     update () {
-      const date = moment(this.pickedDate, 'YYYY-MM-DD')
-      this.$emit('input', date.unix())
+      const dateTime = moment(`${this.pickedDateTime[0]} ${this.pickedDateTime[1]}`, 'YYYY-MM-DD HH:mm')
+      this.$emit('input', dateTime.unix())
       this.close()
     }
   }
 }
 </script>
+
+<style lang="scss">
+
+  .hide-child > :first-child{
+    display: none;
+  }
+
+  .v-time-picker {
+    display: flex !important;
+  }
+
+  .v-picker__actions {
+    display: block;
+    padding: 8px 0;
+  }
+
+  .v-picker--time {
+    margin: 0;
+  }
+
+  .v-picker {
+    display: inherit;
+  }
+
+  .right {
+    float: right;
+  }
+</style>
