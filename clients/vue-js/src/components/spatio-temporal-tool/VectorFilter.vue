@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!--attributes drop box-->
+    <!--ATTRIBUTES DROP BOX-->
     <v-select
       v-bind="_props"
       v-if="allAttributes.length > 1"
@@ -9,6 +9,7 @@
       v-model="attribute"
     />
 
+    <!--TIME INPUTS-->
     <time-field
       :min="range.min"
       :max="range.max"
@@ -23,21 +24,89 @@
       :mask="dateMask"
       label="To"
     />
-    <range-slider
-      :min="range.min"
-      :max="range.max"
-      :fixed="fixedRange"
-      :step="step"
-      v-model="timeRange"
-      class="mx-2"
-      hide-details
-    />
-    <v-checkbox
-      color="primary"
-      label="Fixed range"
-      v-model="fixedRange"
-      hide-details
-    />
+
+    <!--RANGE SLIDER-->
+    <div class="range-container">
+      <v-icon
+        class="animate-icon"
+        v-if="!animate"
+        @click="animate = !animate">
+        play_circle_outline
+      </v-icon>
+      <v-icon
+        class="animate-icon"
+        v-if="animate"
+        @click="animate = !animate">
+        pause_circle_outline
+      </v-icon>
+      <range-slider
+        :min="range.min"
+        :max="range.max"
+        :fixed="fixedRange"
+        :step="step"
+        :animate.sync="animate"
+        :cumulatively="false"
+        :frameRate="1"
+        v-model="timeRange"
+        class="mx-2 time-slider"
+        hide-details
+      />
+      <v-icon
+        class="animate-icon"
+        @click="animationSettings = !animationSettings">
+        settings
+      </v-icon>
+    </div>
+
+    <!--ANIMATION SETTINGS-->
+    <div v-bind:class="{ 'settings-container': animationSettings }"  v-if="animationSettings">
+      <div class="animate-row">
+        <p>fixed range</p>
+        <v-checkbox
+          class="switch"
+          v-model="fixedRange"
+          color="primary"
+          hide-details
+        />
+        <!--label="Fixed range"-->
+      </div>
+      <div class="animate-row">
+        <p>cumulative</p>
+        <v-checkbox
+          class="switch"
+          color="primary"
+          hide-details
+        />
+        <!--v-model="cumulatively"-->
+      </div>
+      <div class="animate-row">
+        <p>speed</p>
+        <v-slider class="speed-slider"
+                  step="0.1"
+                  min="0"
+                  max="4"
+        ></v-slider>
+        <!--v-model="animationSpeed"-->
+        <!--thumbLabel="false"-->
+      </div>
+      <div class="animate-row">
+        <p>step</p>
+        <v-text-field
+          class="step-text ml-20">
+          <!--v-model="setStepValue"-->
+        </v-text-field>
+        <v-select
+          max-height="150"
+          class="step-select"
+          item-value="inUnix"
+          item-text="name"
+        />
+        <!--:items="timeSteps"-->
+        <!--v-model="setTimeStep"-->
+      </div>
+    </div>
+
+
   </div>
 </template>
 
@@ -56,10 +125,15 @@ export default {
   props: ['input', 'layer'],
   data () {
     return lastState || {
-      step: 100,
+      step: 1000,
       attribute: 'All attributes',
+      timeRange: [Number.MIN_VALUE, Number.MAX_VALUE],
+
+      // animation settings
+      animationSettings: false,
+      animate: false,
       fixedRange: false,
-      timeRange: [Number.MIN_VALUE, Number.MAX_VALUE]
+      cumulatively: false
     }
   },
   computed: {
@@ -67,7 +141,7 @@ export default {
       if (this.selectedLayers.length === 1) {
         return this.selectedLayers[0].output_datetime_mask
       } else {
-        return this.getDateTimeMask(this.visibleLayers)
+        return this.getDateTimeMask(this.selectedLayers)
       }
     },
     visibleLayers () {
@@ -116,6 +190,9 @@ export default {
     }
   },
   watch: {
+    animate (value) {
+      console.log(value)
+    },
     selectedLayers: {
       immediate: true,
       handler () {
@@ -195,3 +272,89 @@ export default {
   }
 }
 </script>
+
+<style lang="scss">
+
+  .range-container {
+    display: flex !important;
+    padding: 15px 0 10px;
+  }
+
+  .time-slider {
+    width: 80% !important;
+    height: 32px;
+    padding: 0 10px;
+  }
+
+  .settings-container {
+    margin: 5px 0;
+    padding-top: 15px;
+    opacity: 0;
+    animation: fadeIn 0.3s ease-in both;
+    background-color: aliceblue;
+  }
+
+  .animate-icon {
+    cursor: pointer;
+    color: gray !important;
+  }
+
+  .animate-row {
+    max-height: 40px;
+    margin-bottom: -10px;
+    display: flex;
+  }
+
+  .animate-row > div {
+    max-width: 170px;
+    margin-left: auto;
+  }
+
+  .switch {
+    margin-top: 0;
+  }
+
+  .switch > div > div > div {
+    margin: auto;
+  }
+
+  .speed-slider {
+    padding: 0 !important;
+    width: 100%;
+    margin-left: 20px;
+  }
+
+  .step-text {
+    padding: 0;
+    margin-top: -3px;
+    margin-left: auto !important;
+    max-width: 70px !important;
+  }
+
+  .step-select {
+    padding: 0;
+    margin-top: -3px;
+    margin-left: 0 !important;
+    max-width: 100px !important;
+  }
+
+  .step-select > div > div {
+    overflow: inherit;
+  }
+
+  .step-text > div > input {
+    text-align: center;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translate3d(0, -20%, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+</style>
