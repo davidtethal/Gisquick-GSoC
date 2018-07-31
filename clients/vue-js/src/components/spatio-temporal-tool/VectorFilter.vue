@@ -45,8 +45,10 @@
         :fixed="fixedRange"
         :step="step"
         :animate.sync="animate"
-        :cumulatively="false"
-        :frameRate="1"
+        :cumulatively="cumulatively"
+        :frameRate="animationSpeed"
+        :animationStepValue="animationStepValue"
+        :animationStep="animationStep"
         v-model="timeRange"
         class="mx-2 time-slider"
         hide-details
@@ -74,6 +76,7 @@
         <p>cumulative</p>
         <v-checkbox
           class="switch"
+          v-model="cumulatively"
           color="primary"
           hide-details
         />
@@ -82,27 +85,28 @@
       <div class="animate-row">
         <p>speed</p>
         <v-slider class="speed-slider"
+                  v-model="animationSpeed"
                   step="0.1"
                   min="0"
                   max="4"
         ></v-slider>
-        <!--v-model="animationSpeed"-->
         <!--thumbLabel="false"-->
       </div>
       <div class="animate-row">
         <p>step</p>
         <v-text-field
-          class="step-text ml-20">
-          <!--v-model="setStepValue"-->
+          class="step-text ml-20"
+          v-model="animationStepValue"
+        >
         </v-text-field>
         <v-select
-          max-height="150"
           class="step-select"
+          v-model="animationStep"
+          :items="animationStepArray"
+          max-height="150"
           item-value="inUnix"
           item-text="name"
         />
-        <!--:items="timeSteps"-->
-        <!--v-model="setTimeStep"-->
       </div>
     </div>
 
@@ -133,7 +137,18 @@ export default {
       animationSettings: false,
       animate: false,
       fixedRange: false,
-      cumulatively: false
+      cumulatively: false,
+      animationSpeed: 2,
+      animationStepValue: null,
+      animationStep: null,
+      animationStepArray: [
+        {name: 'seconds', inUnix: 1},
+        {name: 'minutes', inUnix: 60},
+        {name: 'hours', inUnix: 3600},
+        {name: 'days', inUnix: 86400},
+        {name: 'months', inUnix: 2592000},
+        {name: 'years', inUnix: 31536000}
+      ]
     }
   },
   computed: {
@@ -190,9 +205,6 @@ export default {
     }
   },
   watch: {
-    animate (value) {
-      console.log(value)
-    },
     selectedLayers: {
       immediate: true,
       handler () {

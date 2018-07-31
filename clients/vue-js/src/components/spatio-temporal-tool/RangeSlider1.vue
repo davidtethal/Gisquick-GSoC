@@ -7,8 +7,19 @@
 
 <script>
 export default {
-  // requires to specify all needed props to propagate them to original rangle slider component
-  props: ['value', 'fixed', 'min', 'max', 'hideDetails', 'animate', 'cumulatively', 'frameRate'],
+  // requires to specify all needed props to propagate them to original range slider component
+  props: {
+    value: Array,
+    min: Number,
+    max: Number,
+    frameRate: Number,
+    fixed: Boolean,
+    hideDetails: Boolean,
+    animate: Boolean,
+    cumulatively: Boolean,
+    animationStep: Number,
+    animationStepValue: Number
+  },
 
   watch: {
     animate: {
@@ -21,7 +32,14 @@ export default {
 
   computed: {
     animateStep () {
-      return (this.max - this.min) / 100
+      if (this.animationStep) {
+        return this.animationStepValue * this.animationStep
+      } else {
+        return (this.max - this.min) / 100
+      }
+    },
+    animateSpeed () {
+      return 0.2813 * this.frameRate * this.frameRate - 2.063 * this.frameRate + 4
     }
   },
 
@@ -68,7 +86,7 @@ export default {
           }
         }
         this.$emit('input', [this.value[0], this.value[1]])
-        setTimeout(this.newFrame, this.frameRate * 1000)
+        setTimeout(this.newFrame, this.animateSpeed * 1000)
       }
     }
   }
