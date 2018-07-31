@@ -29,7 +29,7 @@
       <v-time-picker
         class="time-picker"
         v-model="pickedDateTime[1]"
-        v-if="includeTime"
+        v-if="includeTime && open"
         format="24hr"
         no-title
       ></v-time-picker>
