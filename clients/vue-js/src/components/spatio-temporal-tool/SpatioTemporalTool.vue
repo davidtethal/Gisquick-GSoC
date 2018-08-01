@@ -14,10 +14,11 @@
       :layer="this.layer"
     />
 
-    <!--     <raster-filter
-          v-if="selection && selection.type === 'raster'"
-          :input="selection.value"
-        /> -->
+    <raster-filter
+      v-if="selection && selection.type === 'raster'"
+      :input="selection.value"
+      :layer="this.layer"
+    />
 
   </div>
 </template>
@@ -26,6 +27,7 @@
   import ImageLayer from 'ol/layer/image'
   import { WebgisImageWMS, layersList } from '../../map-builder'
   import VectorFilter from './VectorFilter'
+  import RasterFilter from './RasterFilter'
 
 
   let state = null
@@ -34,7 +36,7 @@
     icon: 'time-slider',
     title: 'Time',
     inject: ['$map', '$project', '$overlays'],
-    components: { VectorFilter },
+    components: { VectorFilter, RasterFilter },
 
     data () {
       return state || {
@@ -44,7 +46,7 @@
 
     computed: {
       layers () {
-        return layersList(this.$project.layers, true)
+        return layersList(this.$project.layers, false)
       },
       layersSelection () {
         const items = this.layers
@@ -52,7 +54,7 @@
           .map(layer => ({
             text: layer.title,
             value: layer,
-            type: layer.time_values.length > 0 ? 'vector' : 'raster'
+            type: layer.time_values && layer.time_values.length > 0 ? 'vector' : 'raster'
           }))
         const vector = items.filter(item => item.type === 'vector')
         if (vector.length > 1) {
