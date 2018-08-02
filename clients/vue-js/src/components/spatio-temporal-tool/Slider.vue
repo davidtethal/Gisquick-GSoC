@@ -14,17 +14,11 @@
       max: Number,
       step: Number,
       'tick-size': String,
-      ticks: String
-//      frameRate: Number,
-//      fixed: Boolean,
-//      hideDetails: Boolean,
-//      animate: Boolean,
-//      cumulatively: Boolean,
-//      animationStep: Number,
-//      animationStepValue: Number
+      ticks: String,
+      animate: Boolean,
+      frameRate: Number
     },
 
-/*
     watch: {
       animate: {
         immediate: true,
@@ -33,53 +27,30 @@
         }
       }
     },
-*/
 
-/*
     computed: {
-      animateStep () {
-        if (this.animationStep) {
-          return this.animationStepValue * this.animationStep
-        } else {
-          return (this.max - this.min) / 100
-        }
-      },
       animateSpeed () {
         return 0.2813 * this.frameRate * this.frameRate - 2.063 * this.frameRate + 4
       }
     },
-*/
 
     methods: {
-      handleInput (value) {
-        this.$emit('input', value)
-      }
-/*
+      handleInput (index) {
+        this.$emit('input', index)
+      },
       newFrame () {
+        let index = this.value
         if (this.animate) {
-          if (this.cumulatively) {
-            if (this.value[1] < this.max - this.animateStep) {
-              this.value[1] += this.animateStep
-            } else if (this.value[0] < this.max - 2 * this.animateStep) {
-              this.value[0] += this.animateStep
-            } else {
-              this.$emit('update:animate', false)
-              return
-            }
+          if (index === this.max) {
+            index = 0
           } else {
-            if (this.value[1] < this.max - this.animateStep) {
-              this.value[0] += this.animateStep
-              this.value[1] += this.animateStep
-            } else {
-              this.$emit('update:animate', false)
-              return
-            }
+            index += 1
           }
-          this.$emit('input', [this.value[0], this.value[1]])
+          this.$emit('input', index)
           setTimeout(this.newFrame, this.animateSpeed * 1000)
         }
       }
-*/
     }
   }
+
 </script>

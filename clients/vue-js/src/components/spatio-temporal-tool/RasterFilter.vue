@@ -17,7 +17,6 @@
 
     <!--SLIDER-->
     <div class="range-container">
-<!--
       <v-icon
         class="animate-icon"
         v-if="!animate"
@@ -30,81 +29,46 @@
         @click="animate = !animate">
         pause_circle_outline
       </v-icon>
--->
       <slider
         class="mx-2 time-slider"
         v-model="timeValuesIndex"
         :min="range.min"
         :max="range.max"
         :step="1"
+        :animate="animate"
+        :frameRate="frameRate"
         ticks="always"
         tick-size="2"
         hide-details
       />
-      <!--:fixed="fixedRange"-->
-      <!--:step="step"-->
-      <!--:animate.sync="animate"-->
-      <!--:cumulatively="cumulatively"-->
-      <!--:frameRate="animationSpeed"-->
-      <!--:animationStepValue="animationStepValue"-->
-      <!--:animationStep="animationStep"-->
-
-      <!--
-            <v-icon
-              class="animate-icon"
-              @click="animationSettings = !animationSettings">
-              settings
-            </v-icon>
-      -->
+      <v-icon
+        class="animate-icon"
+        @click="animationSettings = !animationSettings">
+        settings
+      </v-icon>
     </div>
 
-   <!-- &lt;!&ndash;ANIMATION SETTINGS&ndash;&gt;
+    <!--ANIMATION SETTINGS-->
     <div v-bind:class="{ 'settings-container': animationSettings }"  v-if="animationSettings">
       <div class="animate-row">
-        <p>fixed range</p>
-        <v-checkbox
-          class="switch"
-          v-model="fixedRange"
-          color="primary"
-          hide-details
-        />
-      </div>
-      <div class="animate-row">
-        <p>cumulative</p>
-        <v-checkbox
-          class="switch"
-          v-model="cumulatively"
-          color="primary"
-          hide-details
-        />
+        <p>opacity</p>
+        <v-slider class="options-slider"
+                  v-model="layerOpacity"
+                  step="1"
+                  min="0"
+                  max="250"
+        ></v-slider>
       </div>
       <div class="animate-row">
         <p>speed</p>
-        <v-slider class="speed-slider"
-                  v-model="animationSpeed"
+        <v-slider class="options-slider"
+                  v-model="frameRate"
                   step="0.1"
                   min="0"
                   max="4"
         ></v-slider>
       </div>
-      <div class="animate-row">
-        <p>step</p>
-        <v-text-field
-          class="step-text ml-20"
-          v-model="animationStepValue"
-          mask="##"
-        ></v-text-field>
-        <v-select
-          class="step-select"
-          v-model="animationStep"
-          :items="animationStepArray"
-          max-height="150"
-          item-value="inUnix"
-          item-text="name"
-        />
-      </div>
-    </div>-->
-
+    </div>
 
   </div>
 </template>
@@ -124,29 +88,19 @@
     props: ['input', 'layer'],
     data () {
       return lastState || {
-        timeValuesIndex: null
+        timeValuesIndex: null,
 
-/*
         // animation settings
         animationSettings: false,
         animate: false,
-        fixedRange: false,
-        cumulatively: false,
-        animationSpeed: 2,
-        animationStepValue: null,
-        animationStep: null,
-        animationStepArray: [
-          {name: 'seconds', inUnix: 1},
-          {name: 'minutes', inUnix: 60},
-          {name: 'hours', inUnix: 3600},
-          {name: 'days', inUnix: 86400},
-          {name: 'months', inUnix: 2592000},
-          {name: 'years', inUnix: 31536000}
-        ]
-*/
+        layerOpacity: 250,
+        frameRate: 2
       }
     },
     computed: {
+      visibleLayers () {
+        return this.$overlays.list.filter(l => l.visible)
+      },
       outputTime () {
         return moment(this.activeTime * 1000).format('YYYY-MM-DD')
       },
@@ -187,14 +141,13 @@
       },
       activeLayer: {
         immediate: true,
-        handler () {
-          this.selectedLayers.forEach(l => {
-            if (l.name === this.activeLayer.name) {
-              this.setLayerVisibility(l, true)
-            } else if (l.visible) {
-              this.setLayerVisibility(l, false)
-            }
-          })
+        handler (activeLayer, oldLayer) {
+          this.selectedLayers
+            .filter(l => l.visible || l._visible)
+            .forEach(l => { this.setLayerVisibility(l, false) })
+          this.setLayerVisibility(activeLayer, true)
+          this.setGroupVisibility(activeLayer, true)
+          this.layer.getSource().updateParams({'OPACITIES': this.getOpacities(activeLayer, oldLayer)})
         }
       }
     },
@@ -203,13 +156,34 @@
     },
     methods: {
       setLayerVisibility (layer, visible) {
-        const visibleLayers = this.$overlays.list.filter(l => l.visible)
         if (layer) {
-          visibleLayers.push(layer)
+          this.visibleLayers.push(layer)
           layer._visible = visible
           layer.visible = visible
         }
-        this.layer.getSource().setVisibleLayers(visibleLayers.map(l => l.name))
+        this.layer.getSource().setVisibleLayers(this.visibleLayers.map(l => l.name))
+      },
+      setGroupVisibility (layer, visible) {
+        this.$overlays.tree.forEach(group => {
+          if (group.isGroup) {
+            const index = group.layers.indexOf(layer)
+            if (index !== -1) {
+              group.visible = visible
+              return true
+            }
+          }
+        })
+      },
+      getOpacities (layer, oldLayer) {
+        let opacityArray = []
+        this.visibleLayers.forEach(l => {
+          if (l.name === layer.name) {
+            opacityArray.push(this.layerOpacity)
+          } else if (oldLayer && l.name !== oldLayer.name) {
+            opacityArray.push(250)
+          }
+        })
+        return opacityArray.join(',')
       }
     }
   }
@@ -218,5 +192,56 @@
 
 <style lang="scss">
 
+  .range-container {
+    display: flex !important;
+    padding: 15px 0 10px;
+  }
+
+  .time-slider {
+    width: 80% !important;
+    height: 32px;
+    padding: 0 10px;
+  }
+
+  .settings-container {
+    margin: 5px 0;
+    padding-top: 15px;
+    opacity: 0;
+    animation: fadeIn 0.3s ease-in both;
+    background-color: aliceblue;
+  }
+
+  .animate-icon {
+    cursor: pointer;
+    color: gray !important;
+  }
+
+  .animate-row {
+    max-height: 40px;
+    margin-bottom: -10px;
+    display: flex;
+  }
+
+  .animate-row > div {
+    max-width: 170px;
+    margin-left: auto;
+  }
+
+  .options-slider {
+    padding: 0 !important;
+    width: 100%;
+    margin-left: 20px;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translate3d(0, -20%, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
 
 </style>
