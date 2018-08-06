@@ -5,7 +5,7 @@
       v-bind="_props"
       label="Select Attribute"
       :items="attributesOptions"
-      v-model="filter.attribute"
+      v-model="attribute"
     />
 
     <!--TIME INPUTS-->
@@ -127,8 +127,8 @@ export default {
   data () {
     return lastState || {
       step: 1000,
+      attribute: 'All attributes',
       filter: {
-        attribute: 'All attributes',
         timeRange: [Number.MIN_VALUE, Number.MAX_VALUE]
       },
 
@@ -164,31 +164,31 @@ export default {
     selectedLayers () {
       return Array.isArray(this.input) ? this.input : [this.input]
     },
-    allAttributes () {
+    layersAttributes () {
       return [...new Set(this.selectedLayers
         .filter(l => l.visible)
         .map(l => l.visible && l.original_time_attribute))]
     },
     attributesOptions () {
-      if (this.allAttributes.length > 1) {
-        return ['All attributes', ...this.allAttributes]
+      if (this.layersAttributes.length > 1) {
+        return ['All attributes', ...this.layersAttributes]
       }
-      return this.allAttributes
+      return this.layersAttributes
     },
-    filterAttribute () {
-//      if (this.allAttributes.includes(this.filter.attribute)) {
+//    filterAttribute () {
+//      if (this.layersAttributes.includes(this.filter.attribute)) {
 //        return this.filter.attribute
 //      }
-//      return this.allAttributes[0]
-      if (this.attributesOptions.length <= 1) {
-        return this.attributesOptions[0]
-      } else {
-        return this.filter.attribute
-      }
-    },
+//      return this.layersAttributes[0]
+//      if (this.attributesOptions.length <= 1) {
+//        return this.attributesOptions[0]
+//      } else {
+//        return this.filter.attribute
+//      }
+//    },
     filterLayers () {
-      return this.selectedLayers.filter(l => l.original_time_attribute === this.filterAttribute ||
-                                             this.filterAttribute === 'All attributes')
+      return this.selectedLayers.filter(l => l.original_time_attribute === this.attribute ||
+                                             this.attribute === 'All attributes')
     },
     range () {
       return {
@@ -204,37 +204,34 @@ export default {
         layer.timeMax = this.filter.timeRange[1]
       })
       return filters
-    },
-    // string filter identifier just for watcher
-    filterKey () {
-      return this.filterLayers.map(l => l.name) + ':' + this.filterAttribute
     }
+    // string filter identifier just for watcher
+//    filterKey () {
+//      return this.filterLayers.map(l => l.name) + ':' + this.filterAttribute
+//    }
   },
   watch: {
-    filterKey: {
+    filterLayers: {
       immediate: true,
-      handler () {
-        const timeLayer = this.filterLayers.find(l => l.timeFilter)
+      handler (filterLayers) {
+        const timeLayer = filterLayers.find(l => l.timeFilter)
         const timeRange = timeLayer ? timeLayer.timeFilter.timeRange : [Number.MIN_VALUE, Number.MAX_VALUE]
         // create new filter model and use it in all filtered layers
         this.filter = {
-          attribute: this.filterAttribute,
           timeRange
         }
-        this.filterLayers
-          .forEach(l =>
-            this.$set(l, 'timeFilter', this.filter)
-          )
+        filterLayers.forEach(l => this.$set(l, 'timeFilter', this.filter))
       }
     },
     selectedLayers: {
       immediate: true,
-      handler () {
-        if (this.allAttributes.length > 1) {
+      handler (selectedLayers) {
+        this.attribute = selectedLayers.length > 1 ? 'All attributes' : this.layersAttributes[0]
+        if (this.layersAttributes.length > 1) {
           this.filter.attribute = this.attributesOptions[0]
         }
-        if (this.selectedLayers.length === 1 && this.selectedLayers[0].visible === false) {
-          this.setLayerVisibility(this.selectedLayers[0], true)
+        if (selectedLayers.length === 1 && selectedLayers[0].visible === false) {
+          this.setLayerVisibility(selectedLayers[0], true)
         }
       }
     },
@@ -295,13 +292,13 @@ export default {
       for (let i = 0; i < layers.length; i++) {
         if (layers[i].output_datetime_mask.includes('HH:mm') &&
            layers[i].output_datetime_mask.includes('YYYY') &&
-           (this.filter.attribute === 'All attributes' || layers[i].original_time_attribute === this.filter.attribute)) {
+           (this.attribute === 'All attributes' || layers[i].original_time_attribute === this.attribute)) {
           return layers[i].output_datetime_mask
         }
       }
       for (let i = 0; i < layers.length; i++) {
         if (layers[i].output_datetime_mask.includes('YYYY') &&
-           (this.filter.attribute === 'All attributes' || layers[i].original_time_attribute === this.filter.attribute)) {
+           (this.attribute === 'All attributes' || layers[i].original_time_attribute === this.attribute)) {
           return layers[i].output_datetime_mask
         }
       }
