@@ -18,7 +18,7 @@ export default {
     animate: Boolean,
     cumulatively: Boolean,
     animationStep: Number,
-    animationStepValue: Number
+    animationStepValue: String
   },
 
   watch: {
@@ -33,7 +33,7 @@ export default {
   computed: {
     animateStep () {
       if (this.animationStep) {
-        return this.animationStepValue * this.animationStep
+        return parseInt(this.animationStepValue) * this.animationStep
       } else {
         return (this.max - this.min) / 100
       }

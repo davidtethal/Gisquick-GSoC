@@ -29,18 +29,16 @@
         @click="animate = !animate">
         pause_circle_outline
       </v-icon>
-      <slider
+      <v-slider
         class="mx-2 time-slider"
         v-model="timeValuesIndex"
         :min="range.min"
         :max="range.max"
-        :step="1"
-        :animate="animate"
-        :frameRate="frameRate"
+        step="1"
         ticks="always"
         tick-size="2"
-        hide-details
-      />
+        hide-details>
+      </v-slider>
       <v-icon
         class="animate-icon"
         @click="animationSettings = !animationSettings">
@@ -78,12 +76,12 @@
   // import _throttle from 'lodash/throttle'
 //  import _debounce from 'lodash/debounce'
   import TimeField from './TimeField'
-  import Slider from './Slider'
+//  import Slider from './Slider'
 
   let lastState
 
   export default {
-    components: { TimeField, Slider },
+    components: { TimeField },
     inject: ['$map', '$overlays'],
     props: ['input', 'layer'],
     data () {
@@ -94,7 +92,7 @@
         animationSettings: false,
         animate: false,
         layerOpacity: 250,
-        frameRate: 2
+        frameRate: 2  // sec
       }
     },
     computed: {
@@ -109,8 +107,6 @@
       },
       range () {
         return {
-//          min: Math.min(...this.selectedLayers.map(l => l.time_stamp)),
-//          max: Math.max(...this.selectedLayers.map(l => l.time_stamp))
           min: 0,
           max: this.timeValues.length - 1
         }
@@ -130,6 +126,9 @@
         let group = this.selectedLayers
         group.forEach(l => { rasterGroupTimeValues.push(parseInt(l.time_stamp)) })
         return rasterGroupTimeValues.sort(function (a, b) { return a - b })
+      },
+      animateSpeed () {
+        return 0.2813 * this.frameRate * this.frameRate - 2.063 * this.frameRate + 4
       }
     },
     watch: {
@@ -148,6 +147,12 @@
           this.setLayerVisibility(activeLayer, true)
           this.setGroupVisibility(activeLayer, true)
           this.layer.getSource().updateParams({'OPACITIES': this.getOpacities(activeLayer, oldLayer)})
+        }
+      },
+      animate: {
+        immediate: true,
+        handler () {
+          this.newFrame()
         }
       }
     },
@@ -184,6 +189,16 @@
           }
         })
         return opacityArray.join(',')
+      },
+      newFrame () {
+        if (this.animate) {
+          if (this.timeValuesIndex === this.range.max) {
+            this.timeValuesIndex = 0
+          } else {
+            this.timeValuesIndex += 1
+          }
+          setTimeout(this.newFrame, this.animateSpeed * 1000)
+        }
       }
     }
   }

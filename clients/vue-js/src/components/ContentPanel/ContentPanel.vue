@@ -100,14 +100,14 @@
 <script>
   import { layersList, groupLayers } from '../../map-builder'
   import LayerItem from './LayerItem'
-  import Slider from './Slider'
+//  import Slider from './Slider'
   import BaseLayerItem from './BaseLayerItem'
   import MapLegend from './Legend'
 
   export default {
     name: 'content-panel',
     components: {
-      Slider, LayerItem, BaseLayerItem, MapLegend }, // Legend, ScrollArea,
+      LayerItem, BaseLayerItem, MapLegend }, // Legend, ScrollArea,
     props: ['baseLayers', 'overlays', 'project', 'map'],
     inject: ['$map'],
     data: () => ({

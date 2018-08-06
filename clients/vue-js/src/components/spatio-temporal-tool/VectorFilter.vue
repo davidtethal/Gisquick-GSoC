@@ -115,7 +115,7 @@ import moment from 'moment'
 // import _throttle from 'lodash/throttle'
 import _debounce from 'lodash/debounce'
 import TimeField from './TimeField'
-import RangeSlider from './RangeSlider1'
+import RangeSlider from './RangeSlider'
 import LayerInfo from './LayerInfo'
 
 let lastState
@@ -175,17 +175,6 @@ export default {
       }
       return this.layersAttributes
     },
-//    filterAttribute () {
-//      if (this.layersAttributes.includes(this.filter.attribute)) {
-//        return this.filter.attribute
-//      }
-//      return this.layersAttributes[0]
-//      if (this.attributesOptions.length <= 1) {
-//        return this.attributesOptions[0]
-//      } else {
-//        return this.filter.attribute
-//      }
-//    },
     filterLayers () {
       return this.selectedLayers.filter(l => l.original_time_attribute === this.attribute ||
                                              this.attribute === 'All attributes')
