@@ -33,8 +33,8 @@
   let state = null
 
   export default {
-    icon: 'time-slider',
     title: 'Time',
+    icon: 'time-slider',
     inject: ['$map', '$project', '$overlays'],
     components: { VectorFilter, RasterFilter },
 
