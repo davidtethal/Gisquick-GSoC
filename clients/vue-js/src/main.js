@@ -14,7 +14,7 @@ import SwitchTransition from './transitions/SwitchTransition'
 
 import 'material-icons/iconfont/material-icons.scss'
 import 'vuetify/dist/vuetify.min.css'
-
+import './common.scss'
 
 // register general purpose components globally
 Vue.component('scroll-area', ScrollArea)

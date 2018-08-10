@@ -123,18 +123,18 @@ export default Vue.component('layer-item', {
   .icon--selection-control {
     top: 0;
   }
-  .v-radio {
-    padding-left: 2px;
-    margin-bottom: 0;
-    height: 2em;
-    label {
-      font-size: 0.938rem;
-      color: #333;
-    }
-  }
 
   .v-input--radio-group {
     margin-top: 0;
+    .v-radio {
+      padding-left: 2px;
+      margin-bottom: 0;
+      height: 2em;
+      label {
+        font-size: 0.938rem;
+        color: #333;
+      }
+    }
   }
   .item-container {
     .item {

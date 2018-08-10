@@ -55,14 +55,13 @@ export default {
 
 <style lang="scss">
 @import './transitions/transitions.scss';
-@import './common.scss';
 
 html, body {
   margin: 0;
   width: 100%;
   height: 100%;
-  font-size: 1em;
-  overflow: hidden;
+  font-size: 1em!important;
+  overflow: hidden!important;
 }
 
 #app {
@@ -70,11 +69,5 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   width: 100%;
   height: 100%;
-}
-.v-input--checkbox, .v-radio {
-  input {
-    width: 26px;
-    height: 26px;
-  }
 }
 </style>
