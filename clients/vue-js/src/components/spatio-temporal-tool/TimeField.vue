@@ -141,18 +141,23 @@ export default {
     display: flex !important;
   }
 
-  .v-picker__actions {
+ /* .v-picker__actions {
     display: block;
     padding: 8px 0;
   }
-
+*/
   .v-picker--time {
     margin: 0;
   }
 
-  .v-picker {
-    display: inherit;
+  .v-card__actions {
+    display: block !important;
+    padding: 8px 0 !important;
   }
+
+  /*.v-picker {*/
+    /*display: flex !important;*/
+  /*}*/
 
   .right {
     float: right;

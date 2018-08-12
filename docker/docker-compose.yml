@@ -10,7 +10,7 @@ services:
 
   django:
     restart: always
-    image: davidtethal/gisquick-raster
+    image: gisquick/django:gsoc
 #    image: gisquick/django
     links:
       - qgisserver

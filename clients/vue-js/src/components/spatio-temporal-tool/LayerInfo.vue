@@ -4,13 +4,25 @@
     v-if="layer.timeFilter"
   >
     <v-icon>access_time</v-icon>
-    <span>{{ layer.original_time_attribute }} {{ layer.timeFilter.timeRange }}</span>
+    <span>{{ layer.original_time_attribute }} {{ dateRange }}</span>
   </v-layout>
 </template>
 
 <script>
+  import moment from 'moment'
+
   export default {
-    props: ['layer']
+    props: ['layer'],
+
+    computed: {
+      dateRange () {
+//        const mask = this.layer.output_datetime_mask
+        const mask = 'DD-MM-YYYY'
+        const since = moment(this.layer.timeFilter.timeRange[0] * 1000).format(mask)
+        const till = moment(this.layer.timeFilter.timeRange[1] * 1000).format(mask)
+        return `${since}, ${till}`
+      }
+    }
   }
 </script>
 
