@@ -340,14 +340,6 @@ export default {
       margin-top: 0.2em !important;
     }
 
-    .settings-container {
-      margin: 5px 0;
-      padding-top: 15px;
-      opacity: 0;
-      animation: fadeIn 0.3s ease-in both;
-      background-color: aliceblue;
-    }
-
     .animate-icon {
       cursor: pointer;
       color: gray !important;

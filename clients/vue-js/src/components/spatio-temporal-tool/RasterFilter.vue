@@ -39,35 +39,46 @@
         tick-size="2"
         hide-details>
       </v-slider>
-      <v-icon
-        class="animate-icon"
-        @click="animationSettings = !animationSettings">
-        settings
-      </v-icon>
-    </div>
 
-    <!--ANIMATION SETTINGS-->
-    <div v-bind:class="{ 'settings-container': animationSettings }"  v-if="animationSettings">
-      <div class="animate-row">
-        <p>opacity</p>
-        <v-slider class="options-slider"
-                  v-model="layerOpacity"
-                  step="1"
-                  min="0"
-                  max="250"
-        ></v-slider>
-      </div>
-      <div class="animate-row">
-        <p>speed</p>
-        <v-slider class="options-slider"
-                  v-model="frameRate"
-                  step="0.1"
-                  min="0"
-                  max="4"
-        ></v-slider>
-      </div>
+      <!--ANIMATION SETTINGS-->
+      <v-menu
+        :close-on-content-click="false"
+      >
+        <v-btn icon slot="activator">
+          <v-icon>more_vert</v-icon>
+        </v-btn>
+        <v-list>
+          <text-separator>Raster settings</text-separator>
+          <v-list-tile>
+            <v-list-tile-content>
+              <v-list-tile-title>Opacity</v-list-tile-title>
+            </v-list-tile-content>
+            <v-list-tile-action>
+              <v-slider class="options-slider"
+                        v-model="layerOpacity"
+                        step="1"
+                        min="0"
+                        max="250"
+              ></v-slider>
+            </v-list-tile-action>
+          </v-list-tile>
+          <text-separator>Animation settings</text-separator>
+          <v-list-tile>
+            <v-list-tile-content>
+              <v-list-tile-title>Speed</v-list-tile-title>
+            </v-list-tile-content>
+            <v-list-tile-action>
+              <v-slider class="options-slider"
+                        v-model="frameRate"
+                        step="0.1"
+                        min="0"
+                        max="4"
+              ></v-slider>
+            </v-list-tile-action>
+          </v-list-tile>
+        </v-list>
+      </v-menu>
     </div>
-
   </div>
 </template>
 
@@ -210,53 +221,39 @@
   .range-container {
     display: flex !important;
     padding: 15px 0 10px;
-  }
 
-  .time-slider {
-    width: 80% !important;
-    height: 32px;
-    padding: 0 10px;
-  }
+    .v-btn--icon {
+      margin: 0 !important;
+    }
 
-  .settings-container {
-    margin: 5px 0;
-    padding-top: 15px;
-    opacity: 0;
-    animation: fadeIn 0.3s ease-in both;
-    background-color: aliceblue;
-  }
+    .time-slider {
+      width: 80% !important;
+      height: 32px;
+      padding: 0 5px 0 10px;
+      margin-top: 0.2em !important;
+    }
 
-  .animate-icon {
-    cursor: pointer;
-    color: gray !important;
-  }
+    .animate-icon {
+      cursor: pointer;
+      color: gray !important;
+    }
 
-  .animate-row {
-    max-height: 40px;
-    margin-bottom: -10px;
-    display: flex;
-  }
+    .animate-row {
+      max-height: 40px;
+      margin-bottom: -10px;
+      display: flex;
+    }
 
-  .animate-row > div {
-    max-width: 170px;
-    margin-left: auto;
+    .animate-row > div {
+      max-width: 170px;
+      margin-left: auto;
+    }
   }
 
   .options-slider {
     padding: 0 !important;
-    width: 100%;
+    max-width: 6.5em !important;
     margin-left: 20px;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translate3d(0, -20%, 0);
-    }
-    to {
-      opacity: 1;
-      transform: translate3d(0, 0, 0);
-    }
   }
 
 </style>
