@@ -72,6 +72,7 @@
       // disable map cashing
       const map = this.$map
       if (!(map.overlay instanceof ImageLayer)) {
+        console.log('create and switch to WMS layer')
         // create and switch to WMS layer
         this.originalLayer = map.overlay
         this.originalLayer.setVisible(false)
@@ -100,7 +101,9 @@
         this.layer = new ImageLayer({
           visible: true,
           extent: this.$project.project_extent,
-          source
+          source,
+          keepActive: false,
+          oldLayer: this.originalLayer
         })
 
         // set as new main map's layer
@@ -112,9 +115,12 @@
     },
 
     beforeDestroy () {
-      this.$map.removeLayer(this.layer)
-      this.originalLayer.setVisible(true)
-      this.$map.overlay = this.originalLayer
+      if (!this.layer.values_.keepActive) {
+        this.$map.removeLayer(this.layer)
+        this.originalLayer = this.layer.values_.oldLayer
+        this.originalLayer.setVisible(true)
+        this.$map.overlay = this.originalLayer
+      }
       state = this.$data
     }
   }

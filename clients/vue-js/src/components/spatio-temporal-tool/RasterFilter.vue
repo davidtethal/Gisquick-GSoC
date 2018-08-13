@@ -84,10 +84,9 @@
 
 <script>
   import moment from 'moment'
-  // import _throttle from 'lodash/throttle'
+//  import _throttle from 'lodash/throttle'
 //  import _debounce from 'lodash/debounce'
   import TimeField from './TimeField'
-//  import Slider from './Slider'
 
   let lastState
 

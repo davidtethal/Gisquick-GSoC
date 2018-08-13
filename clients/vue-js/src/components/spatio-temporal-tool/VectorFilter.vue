@@ -62,6 +62,20 @@
           <v-icon>more_vert</v-icon>
         </v-btn>
         <v-list>
+          <text-separator>Vector settings</text-separator>
+          <v-list-tile>
+            <v-list-tile-content>
+              <v-list-tile-title>Keep activated</v-list-tile-title>
+            </v-list-tile-content>
+            <v-list-tile-action>
+              <v-checkbox
+                class="switch"
+                v-model="layer.values_.keepActive"
+                color="primary"
+                hide-details
+              />
+            </v-list-tile-action>
+          </v-list-tile>
           <text-separator>Slider settings</text-separator>
           <v-list-tile>
             <v-list-tile-content>
@@ -251,12 +265,13 @@ export default {
     range: {
       immediate: true,
       handler (range) {
-        if (this.selectedLayers.length === 1 && this.selectedLayers[0].timeMin &&
-            (this.filter.timeRange[0] !== this.selectedLayers[0].timeMin &&
-            this.filter.timeRange[1] !== this.selectedLayers[0].timeMax)) {
+//        (this.filter.timeRange[0] !== this.selectedLayers[0].timeMin &&
+//          this.filter.timeRange[1] !== this.selectedLayers[0].timeMax)
+        if (this.selectedLayers.length === 1 && this.selectedLayers[0].timeMin) {
           this.$set(this.filter.timeRange, 0, this.selectedLayers[0].timeMin)
           this.$set(this.filter.timeRange, 1, this.selectedLayers[0].timeMax)
-        } else if (this.filter.timeRange[0] !== range.min && this.filter.timeRange[1] !== range.max) {
+//          if (this.filter.timeRange[0] !== range.min && this.filter.timeRange[1] !== range.max)
+        } else {
           this.$set(this.filter.timeRange, 0, range.min)
           this.$set(this.filter.timeRange, 1, range.max)
         }
@@ -274,7 +289,9 @@ export default {
   },
   beforeDestroy () {
     lastState = this.$data
-    this.$root.$panel.setLayerCustomComponent(null)
+    if (!this.layer.values_.keepActive) {
+      this.$root.$panel.setLayerCustomComponent(null)
+    }
   },
   methods: {
     updateVectorLayer: _debounce(function () {
@@ -355,8 +372,6 @@ export default {
       max-width: 170px;
       margin-left: auto;
     }
-
-
   }
 
   .speed-slider {
