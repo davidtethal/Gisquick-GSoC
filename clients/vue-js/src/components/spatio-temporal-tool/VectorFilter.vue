@@ -232,10 +232,6 @@ export default {
       })
       return filters
     }
-    // string filter identifier just for watcher
-//    filterKey () {
-//      return this.filterLayers.map(l => l.name) + ':' + this.filterAttribute
-//    }
   },
   watch: {
     filterLayers: {
@@ -265,13 +261,14 @@ export default {
     range: {
       immediate: true,
       handler (range) {
-//        (this.filter.timeRange[0] !== this.selectedLayers[0].timeMin &&
-//          this.filter.timeRange[1] !== this.selectedLayers[0].timeMax)
         if (this.selectedLayers.length === 1 && this.selectedLayers[0].timeMin) {
-          this.$set(this.filter.timeRange, 0, this.selectedLayers[0].timeMin)
-          this.$set(this.filter.timeRange, 1, this.selectedLayers[0].timeMax)
-//          if (this.filter.timeRange[0] !== range.min && this.filter.timeRange[1] !== range.max)
-        } else {
+          if (this.filter.timeRange[0] !== this.selectedLayers[0].timeMin) {
+            this.$set(this.filter.timeRange, 0, this.selectedLayers[0].timeMin)
+          }
+          if (this.filter.timeRange[1] !== this.selectedLayers[0].timeMax) {
+            this.$set(this.filter.timeRange, 1, this.selectedLayers[0].timeMax)
+          }
+        } else if (this.filter.timeRange[0] !== range.min && this.filter.timeRange[1] !== range.max) {
           this.$set(this.filter.timeRange, 0, range.min)
           this.$set(this.filter.timeRange, 1, range.max)
         }
