@@ -118,7 +118,7 @@
       },
       activeLayer () {
         if (this.activeTime) {
-          return this.selectedLayers.filter(l => l.time_stamp === this.activeTime)[0]
+          return this.selectedLayers.filter(l => parseInt(l.time_stamp) === this.activeTime)[0]
         }
       },
       timeValues () {

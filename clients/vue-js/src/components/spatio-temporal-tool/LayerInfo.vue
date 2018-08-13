@@ -5,6 +5,13 @@
   >
     <v-icon>access_time</v-icon>
     <span>{{ layer.original_time_attribute }} {{ dateRange }}</span>
+    <v-icon
+      class="refresh"
+      v-if="filtered"
+      @click="resetFilter"
+    >
+      refresh
+    </v-icon>
   </v-layout>
 </template>
 
@@ -21,6 +28,24 @@
         const since = moment(this.layer.timeFilter.timeRange[0] * 1000).format(mask)
         const till = moment(this.layer.timeFilter.timeRange[1] * 1000).format(mask)
         return `${since}, ${till}`
+      },
+      filtered () {
+        if (this.layer.timeFilter.timeRange[0] !== this.layer.time_values[0] ||
+            this.layer.timeFilter.timeRange[1] !== this.layer.time_values[1]) {
+          return true
+        } else {
+          return false
+        }
+      }
+    },
+
+    methods: {
+      resetFilter () {
+        if (this.filtered) {
+          this.layer.timeFilter.timeRange = this.layer.time_values
+          this.layer.timeMin = this.layer.time_values[0]
+          this.layer.timeMax = this.layer.time_values[1]
+        }
       }
     }
   }
@@ -41,6 +66,10 @@
     }
     span {
       font-size: 13px;
+    }
+    .refresh {
+      margin-left: 0.25em;
+      cursor: pointer;
     }
   }
 </style>
