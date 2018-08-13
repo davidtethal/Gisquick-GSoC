@@ -2,6 +2,7 @@
   <div>
     <!--ATTRIBUTES DROP BOX-->
     <v-select
+      v-if="layersAttributes.length > 1"
       v-bind="_props"
       label="Select Attribute"
       :items="attributesOptions"
@@ -52,60 +53,81 @@
         class="mx-2 time-slider"
         hide-details
       />
-      <v-icon
-        class="animate-icon"
-        @click="animationSettings = !animationSettings">
-        settings
-      </v-icon>
-    </div>
 
-    <!--ANIMATION SETTINGS-->
-    <div v-bind:class="{ 'settings-container': animationSettings }"  v-if="animationSettings">
-      <div class="animate-row">
-        <p>fixed range</p>
-        <v-checkbox
-          class="switch"
-          v-model="fixedRange"
-          color="primary"
-          hide-details
-        />
-      </div>
-      <div class="animate-row">
-        <p>cumulative</p>
-        <v-checkbox
-          class="switch"
-          v-model="cumulatively"
-          color="primary"
-          hide-details
-        />
-      </div>
-      <div class="animate-row">
-        <p>speed</p>
-        <v-slider class="speed-slider"
-                  v-model="animationSpeed"
-                  step="0.1"
-                  min="0"
-                  max="4"
-        ></v-slider>
-      </div>
-      <div class="animate-row">
-        <p>step</p>
-        <v-text-field
-          class="step-text ml-20"
-          v-model="animationStepValue"
-          mask="##"
-        ></v-text-field>
-        <v-select
-          class="step-select"
-          v-model="animationStep"
-          :items="animationStepArray"
-          max-height="150"
-          item-value="inUnix"
-          item-text="name"
-        />
-      </div>
+      <!--ANIMATION SETTINGS-->
+      <v-menu
+        :close-on-content-click="false"
+      >
+        <v-btn icon slot="activator">
+          <v-icon>more_vert</v-icon>
+        </v-btn>
+        <v-list>
+          <text-separator>Slider settings</text-separator>
+          <v-list-tile>
+            <v-list-tile-content>
+              <v-list-tile-title>Fixed range</v-list-tile-title>
+            </v-list-tile-content>
+            <v-list-tile-action>
+              <v-checkbox
+                class="switch"
+                v-model="fixedRange"
+                color="primary"
+                hide-details
+              />
+            </v-list-tile-action>
+          </v-list-tile>
+          <text-separator>Animation settings</text-separator>
+          <v-list-tile>
+            <v-list-tile-content>
+              <v-list-tile-title>Cumulative</v-list-tile-title>
+            </v-list-tile-content>
+            <v-list-tile-action>
+              <v-checkbox
+                class="switch"
+                v-model="cumulatively"
+                color="primary"
+                hide-details
+              />
+            </v-list-tile-action>
+          </v-list-tile>
+          <v-list-tile>
+            <v-list-tile-content>
+              <v-list-tile-title>Speed</v-list-tile-title>
+            </v-list-tile-content>
+            <v-list-tile-action>
+              <v-slider class="speed-slider"
+                        v-model="animationSpeed"
+                        step="0.1"
+                        min="0"
+                        max="4"
+              ></v-slider>
+            </v-list-tile-action>
+          </v-list-tile>
+          <v-list-tile>
+            <v-list-tile-content>
+              <v-list-tile-title>Step</v-list-tile-title>
+            </v-list-tile-content>
+            <v-list-tile-action>
+              <v-text-field
+                class="step-text ml-20"
+                v-model="animationStepValue"
+                mask="##"
+              ></v-text-field>
+            </v-list-tile-action>
+            <v-list-tile-action>
+              <v-select
+                class="step-select"
+                v-model="animationStep"
+                :items="animationStepArray"
+                max-height="150"
+                item-value="inUnix"
+                item-text="name"
+              />
+            </v-list-tile-action>
+          </v-list-tile>
+        </v-list>
+      </v-menu>
     </div>
-
 
   </div>
 </template>
@@ -121,7 +143,9 @@ import LayerInfo from './LayerInfo'
 let lastState
 
 export default {
-  components: { TimeField, RangeSlider },
+  components: {
+    TimeField,
+    RangeSlider },
   inject: ['$map', '$overlays'],
   props: ['input', 'layer'],
   data () {
@@ -227,10 +251,12 @@ export default {
     range: {
       immediate: true,
       handler (range) {
-        if (this.selectedLayers.length === 1 && this.selectedLayers[0].timeMin) {
+        if (this.selectedLayers.length === 1 && this.selectedLayers[0].timeMin &&
+            (this.filter.timeRange[0] !== this.selectedLayers[0].timeMin &&
+            this.filter.timeRange[1] !== this.selectedLayers[0].timeMax)) {
           this.$set(this.filter.timeRange, 0, this.selectedLayers[0].timeMin)
           this.$set(this.filter.timeRange, 1, this.selectedLayers[0].timeMax)
-        } else {
+        } else if (this.filter.timeRange[0] !== range.min && this.filter.timeRange[1] !== range.max) {
           this.$set(this.filter.timeRange, 0, range.min)
           this.$set(this.filter.timeRange, 1, range.max)
         }
@@ -302,49 +328,48 @@ export default {
   .range-container {
     display: flex !important;
     padding: 15px 0 10px;
-  }
 
-  .time-slider {
-    width: 80% !important;
-    height: 32px;
-    padding: 0 10px;
-  }
+    .v-btn--icon {
+      margin: 0 !important;
+    }
 
-  .settings-container {
-    margin: 5px 0;
-    padding-top: 15px;
-    opacity: 0;
-    animation: fadeIn 0.3s ease-in both;
-    background-color: aliceblue;
-  }
+    .time-slider {
+      width: 80% !important;
+      height: 32px;
+      padding: 0 5px 0 10px;
+      margin-top: 0.2em !important;
+    }
 
-  .animate-icon {
-    cursor: pointer;
-    color: gray !important;
-  }
+    .settings-container {
+      margin: 5px 0;
+      padding-top: 15px;
+      opacity: 0;
+      animation: fadeIn 0.3s ease-in both;
+      background-color: aliceblue;
+    }
 
-  .animate-row {
-    max-height: 40px;
-    margin-bottom: -10px;
-    display: flex;
-  }
+    .animate-icon {
+      cursor: pointer;
+      color: gray !important;
+    }
 
-  .animate-row > div {
-    max-width: 170px;
-    margin-left: auto;
-  }
+    .animate-row {
+      max-height: 40px;
+      margin-bottom: -10px;
+      display: flex;
+    }
 
-  .switch {
-    margin-top: 0;
-  }
+    .animate-row > div {
+      max-width: 170px;
+      margin-left: auto;
+    }
 
-  .switch > div > div > div {
-    margin: auto;
+
   }
 
   .speed-slider {
     padding: 0 !important;
-    width: 100%;
+    width: 7em;
     margin-left: 20px;
   }
 
@@ -352,14 +377,14 @@ export default {
     padding: 0;
     margin-top: -3px;
     margin-left: auto !important;
-    max-width: 70px !important;
+    max-width: 2.5em !important;
   }
 
   .step-select {
     padding: 0;
     margin-top: -3px;
     margin-left: 0 !important;
-    max-width: 100px !important;
+    max-width: 5.5em !important;
   }
 
   .step-select > div > div {
@@ -368,17 +393,6 @@ export default {
 
   .step-text > div > div > div > input {
     text-align: center;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translate3d(0, -20%, 0);
-    }
-    to {
-      opacity: 1;
-      transform: translate3d(0, 0, 0);
-    }
   }
 
 </style>
